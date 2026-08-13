@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renzani.co - Pembukuan Konveksi & Sistem RAB</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS Excel CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase JS SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800 flex flex-col justify-between">
+
+    <!-- Modal Login -->
+    <div id="loginModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 md:p-8 border border-gray-100 relative">
+            <div class="text-center mb-6 flex flex-col items-center">
+                <img src="Renzani.co_2.jpg" alt="Renzani.co Logo" class="w-20 h-20 rounded-full object-cover shadow-lg mb-3 border-2 border-orange-500" onerror="this.src='https://via.placeholder.com/80/f97316/ffffff?text=R';">
+                <h2 class="text-2xl font-black text-gray-800 tracking-wide">Renzani.co</h2>
+                <p class="text-xs text-gray-500 font-semibold mt-0.5">Sistem Pembukuan Konveksi & Management RAB</p>
+                <div class="mt-2">
+                    <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-0.5 rounded-full border border-orange-300">v3.3.6 Workstation SPK Edition</span>
+                </div>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Pengguna / Username</label>
+                    <input type="text" id="loginUsername" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-bold text-orange-900 outline-none focus:ring-2 focus:ring-orange-500" placeholder="Masukkan username...">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password Masuk</label>
+                    <input type="password" id="loginPassword" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Masukkan password...">
+                </div>
+
+                <div id="loginError" class="hidden text-xs text-red-600 font-medium bg-red-50 p-2.5 rounded-lg border border-red-200 text-center">
+                    Username atau Password yang Anda masukkan tidak sesuai!
+                </div>
+
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 rounded-lg transition shadow-md uppercase text-xs tracking-wider">
+                    MASUK KE SISTEM RENZANI.CO
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-gray-100 text-center text-[11px] text-gray-400">
+                Renzani.co Web Application &copy; 2026 | System Version 3.3.6
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT INVOICE & STATUS -->
+    <div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-extrabold text-gray-800 text-sm uppercase">✏️ EDIT TRANSAKSI & STATUS INVOICE</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
+            </div>
+
+            <form id="editForm" onsubmit="saveEditedOrder(event)" class="space-y-4">
+                <input type="hidden" id="editOrderId">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nomor Invoice</label>
+                        <input type="text" id="editNomor" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-xs font-bold text-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama Pemesan</label>
+                        <input type="text" id="editNama" required class="w-full border border-gray-300 rounded-lg p-2 text-xs uppercase font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tim / Event</label>
+                        <input type="text" id="editTimEvent" class="w-full border border-gray-300 rounded-lg p-2 text-xs uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">No. WhatsApp</label>
+                        <input type="text" id="editNoHp" class="w-full border border-gray-300 rounded-lg p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tanggal Order</label>
+                        <input type="date" id="editTanggal" required class="w-full border border-gray-300 rounded-lg p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tanggal Deadline</label>
+                        <input type="date" id="editDeadline" required class="w-full border border-gray-300 rounded-lg p-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-extrabold text-amber-900 uppercase mb-1">STATUS PEMBAYARAN</label>
+                        <select id="editStatus" onchange="toggleEditDpInput()" class="w-full border border-amber-300 rounded-lg p-2 text-xs font-bold bg-white outline-none">
+                            <option value="LUNAS">🟢 LUNAS</option>
+                            <option value="DP">🟡 DP (UANG MUKA)</option>
+                            <option value="CANCEL">🔴 CANCEL / BATAL</option>
+                        </select>
+                    </div>
+                    <div id="editDpContainer" class="hidden">
+                        <label class="block text-xs font-extrabold text-amber-900 uppercase mb-1">NOMINAL DP (RP)</label>
+                        <input type="text" id="editNominalDp" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-amber-300 rounded-lg p-2 text-xs font-bold bg-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Qty (Pcs)</label>
+                        <input type="number" id="editQty" required min="1" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Harga Satuan (Rp)</label>
+                        <input type="text" id="editHargaSatuan" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Bahan Baku (Rp)</label>
+                        <input type="text" id="editBiayaBahan" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Biaya Lainnya (Rp)</label>
+                        <input type="text" id="editBiayaLainnya" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-2">RINCIAN BIAYA JASA PER PCS (RP)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Potong</span>
+                            <input type="text" id="editPotong" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Jahit</span>
+                            <input type="text" id="editJahit" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Press</span>
+                            <input type="text" id="editPress" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Kancing</span>
+                            <input type="text" id="editKancing" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Packing</span>
+                            <input type="text" id="editPacking" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[10px] block text-gray-500 font-bold">Listrik</span>
+                            <input type="text" id="editListrik" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 rounded-lg text-xs uppercase shadow">
+                        💾 SIMPAN PERUBAHAN
+                    </button>
+                    <button type="button" onclick="closeEditModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2.5 rounded-lg text-xs uppercase">
+                        BATAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PERINGATAN RESET DATABASE -->
+    <div id="resetDbModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border-2 border-red-500 space-y-4 relative">
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-red-100 text-red-600 rounded-full">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <h3 class="text-lg font-black text-red-600 uppercase">PERINGATAN RESET DATABASE</h3>
+                <p class="text-xs text-gray-600 font-medium leading-relaxed">
+                    Apakah Anda sudah mengunduh / melakukan <b>BackUp database</b>?<br>
+                    <span class="text-red-600 font-bold">Seluruh data laporan order akan dihapus permanen!</span>
+                </p>
+            </div>
+
+            <form onsubmit="handleResetDatabase(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Masukan Frasa Keamanan Admin</label>
+                    <input type="password" id="resetPassphrase" required class="w-full border-2 border-red-300 rounded-lg p-2.5 text-sm font-bold text-red-700 outline-none focus:ring-2 focus:ring-red-500" placeholder="Masukkan frasa kunci keamanan...">
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition shadow-md text-xs uppercase">
+                        HAPUS SEMUA DATA
+                    </button>
+                    <button type="button" onclick="closeResetDbModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition text-xs uppercase">
+                        BATAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cetak Dokumen (Invoice, SPK, RAB) -->
+    <div id="printModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3 no-print">
+                <h3 class="font-bold text-gray-800 text-sm uppercase" id="printModalTitle">PREVIEW CETAK DOKUMEN</h3>
+                <div class="flex gap-2" id="modalActionButtons">
+                    <button onclick="window.print()" class="bg-orange-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition flex items-center gap-1">
+                        CETAK / SIMPAN PDF
+                    </button>
+                    <button onclick="closePrintModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 transition">
+                        TUTUP
+                    </button>
+                </div>
+            </div>
+            
+            <div id="printArea" class="p-6 bg-white text-gray-900 text-xs leading-relaxed"></div>
+        </div>
+    </div>
+
+    <!-- Main Wrapper App -->
+    <div id="appContainer" class="hidden max-w-7xl mx-auto p-4 md:p-6 space-y-6 w-full">
+
+        <!-- Top Navigation Bar Header -->
+        <header class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img src="Renzani.co_2.jpg" alt="Renzani.co Logo" class="w-12 h-12 rounded-full object-cover shadow border border-orange-500" onerror="this.src='https://via.placeholder.com/48/f97316/ffffff?text=R';">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-black text-gray-800 tracking-tight uppercase">Renzani.co</h1>
+                        <span id="cloudStatusBadge" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-300">Checking Cloud...</span>
+                    </div>
+                    <p class="text-xs text-gray-500 font-medium">Sistem Pembukuan Konveksi, RAB & Manajamen Arus Kas</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                <span id="userBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300 uppercase">
+                    ADMIN (FULL ACCESS)
+                </span>
+
+                <button onclick="handleLogout()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition uppercase">
+                    KELUAR
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 gap-2 overflow-x-auto">
+            <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="py-2.5 px-5 font-bold text-sm border-b-2 border-orange-600 text-orange-600 transition tracking-wide whitespace-nowrap">
+                DASHBOARD ANALISIS & ARUS KAS
+            </button>
+            <button id="tabBtnInput" onclick="switchTab('input')" class="py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap">
+                INPUT ORDER & RAB BARU
+            </button>
+            <button id="tabBtnReport" onclick="switchTab('report')" class="py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap">
+                DAFTAR LAPORAN ORDER
+            </button>
+            <button id="tabBtnBackup" onclick="switchTab('backup')" class="py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap">
+                BACKUP & RESTORE
+            </button>
+        </div>
+
+        <!-- TAB 1: DASHBOARD ANALISIS & PROYEKSI ARUS KAS -->
+        <div id="tabAnalyticsSection" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-[11px] font-bold text-orange-600 uppercase tracking-wider">TOTAL OMZET (KAS MASUK)</div>
+                    <div id="cardOmzet" class="text-xl font-black text-orange-900 mt-1">Rp 0</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider">TOTAL BIAYA HPP & OPS (KAS KELUAR)</div>
+                    <div id="cardOperasional" class="text-xl font-black text-amber-900 mt-1">Rp 0</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">TOTAL LABA BERSIH RIIL</div>
+                    <div id="cardLaba" class="text-xl font-black text-emerald-900 mt-1">Rp 0</div>
+                </div>
+                <div class="bg-red-50 border border-red-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-[11px] font-bold text-red-600 uppercase tracking-wider">ESTIMASI BIAYA LAINNYA</div>
+                    <div id="cardPiutang" class="text-xl font-black text-red-900 mt-1">Rp 0</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Arus Kas Periodik -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
+                    <div>
+                        <h3 class="text-base font-extrabold text-gray-800 uppercase">PROYEKSI ARUS KAS PERIODIK (CASH FLOW)</h3>
+                        <p class="text-xs text-gray-500">Estimasi penerimaan dan pengeluaran dana untuk penarikan deviden / modal operasional.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="cashflowPeriod" onchange="renderTable()" class="border border-gray-300 rounded-lg text-xs p-2 font-bold bg-gray-50 outline-none">
+                            <option value="monthly">PERIODIK BULANAN</option>
+                            <option value="quarterly">PERIODIK TRIWULANAN (Q1 - Q4)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase font-bold border-b">
+                                <th class="p-3">Periode Waktu</th>
+                                <th class="p-3 text-right">Proyeksi Kas Masuk (Omzet)</th>
+                                <th class="p-3 text-right">Proyeksi Kas Keluar (RAB/Ops)</th>
+                                <th class="p-3 text-right">Proyeksi Arus Kas Bersih</th>
+                                <th class="p-3 text-center">Status Arus Kas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashflowTableBody" class="divide-y divide-gray-200 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 class="text-xs font-bold text-gray-600 uppercase mb-3">GRAFIK OMZET VS BIAYA OPERASIONAL (RP)</h4>
+                        <div class="relative h-64">
+                            <canvas id="chartFinancial"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 class="text-xs font-bold text-gray-600 uppercase mb-3">RINCIAN KOMPOSISI BIAYA JASA & OPERASIONAL</h4>
+                        <div class="relative h-64 flex items-center justify-center">
+                            <canvas id="chartExpenses"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: INPUT ORDER & RAB BARU -->
+        <div id="tabInputSection" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-4 border-b pb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 uppercase">FORM INPUT TRANSAKSI ORDER & ESTIMASI RAB</h2>
+                        <p class="text-xs text-gray-500">Pilih status pembayaran (LUNAS/DP/CANCEL) untuk pencatatan kas yang tepat.</p>
+                    </div>
+                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-full uppercase">Renzani v3.3.6</span>
+                </div>
+
+                <form id="orderForm" onsubmit="saveOrder(event)" class="space-y-6">
+                    <!-- INFORMASI UMUM -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nomor Invoice</label>
+                            <input type="text" id="nomor" required class="w-full bg-orange-50 border border-orange-300 text-orange-900 font-extrabold rounded-lg p-2.5 text-sm outline-none uppercase">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama Pemesan</label>
+                            <input type="text" id="nama" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none uppercase" placeholder="NAMA PELANGGAN">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama Tim / Event</label>
+                            <input type="text" id="timEvent" placeholder="TIM / EVENT" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none uppercase">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">No. WhatsApp / HP</label>
+                            <input type="text" id="noHp" placeholder="08123456789" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tanggal Order</label>
+                            <input type="date" id="tanggal" onchange="generateInvoiceNumber()" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tanggal Deadline</label>
+                            <input type="date" id="deadline" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Qty Pesanan (Pcs)</label>
+                            <input type="number" id="qty" value="1" min="1" oninput="calculateTotal()" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-orange-900 uppercase mb-1">Harga Satuan Jual (Rp)</label>
+                            <input type="text" id="hargaSatuan" value="0" oninput="formatCurrencyInput(this)" required class="w-full border border-orange-200 bg-orange-50/30 rounded-lg p-2.5 text-sm font-bold text-orange-900 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- STATUS PEMBAYARAN -->
+                    <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-900 uppercase mb-1">Status Pembayaran</label>
+                            <select id="statusBayar" onchange="toggleInputDp()" class="w-full border border-amber-300 rounded-lg p-2.5 text-xs font-bold bg-white outline-none">
+                                <option value="LUNAS">🟢 LUNAS (Lunas Penuh)</option>
+                                <option value="DP">🟡 DP (Uang Muka / Belum Lunas)</option>
+                                <option value="CANCEL">🔴 CANCEL (Batal / Dibatalkan)</option>
+                            </select>
+                        </div>
+                        <div id="containerDp" class="hidden">
+                            <label class="block text-xs font-bold text-amber-900 uppercase mb-1">Nominal DP / Uang Muka (Rp)</label>
+                            <input type="text" id="nominalDp" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-amber-300 rounded-lg p-2.5 text-xs font-bold bg-white outline-none">
+                        </div>
+                    </div>
+
+                    <!-- RINCIAN BIAYA JASA & OPERASIONAL (TERPISAH) -->
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">RINCIAN BIAYA JASA & OPERASIONAL PER PCS (UNTUK MONITORING EXCEL & RAB)</h3>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Potong (Rp/Pcs)</label>
+                                <input type="text" id="biayaPotong" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Jahit (Rp/Pcs)</label>
+                                <input type="text" id="biayaJahit" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Press (Rp/Pcs)</label>
+                                <input type="text" id="biayaPress" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Kancing (Rp/Pcs)</label>
+                                <input type="text" id="biayaKancing" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Packing (Rp/Pcs)</label>
+                                <input type="text" id="biayaPacking" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Listrik (Rp/Pcs)</label>
+                                <input type="text" id="biayaListrik" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                            <div>
+                                <label class="block text-xs font-extrabold text-rose-700 uppercase mb-1">Biaya Bahan Baku (Rp)</label>
+                                <input type="text" id="biayaBahan" value="0" oninput="formatCurrencyInput(this)" class="w-full border-2 border-rose-300 bg-rose-50 rounded-lg p-2 text-xs font-extrabold text-rose-800 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-extrabold text-amber-800 uppercase mb-1">Biaya Lainnya (Rp)</label>
+                                <input type="text" id="biayaLainnya" value="0" oninput="formatCurrencyInput(this)" class="w-full border-2 border-amber-300 bg-amber-50 rounded-lg p-2 text-xs font-extrabold text-amber-900 outline-none" placeholder="Aksesoris, ongkir, dll">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD RINGKASAN LIVE -->
+                    <div class="bg-gradient-to-r from-slate-900 to-orange-950 text-white p-5 rounded-2xl shadow-lg border border-slate-800 space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                            <h3 class="text-xs font-extrabold uppercase tracking-wider text-orange-400">
+                                KALKULASI REAL-TIME RAB & LABA
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Omzet</p>
+                                <p id="dispTotalKotor" class="text-lg font-black text-orange-300">Rp 0</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Biaya Jasa / Pcs</p>
+                                <p id="dispTotalJasa" class="text-lg font-black text-amber-300">Rp 0</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total RAB Operasional</p>
+                                <p id="dispSisaBayar" class="text-lg font-black text-red-400">Rp 0</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Estimasi Laba Bersih</p>
+                                <p id="dispTotalReal" class="text-lg font-black text-emerald-400">Rp 0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 text-sm uppercase">
+                        SIMPAN TRANSAKSI & GENERATE RAB
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: DAFTAR LAPORAN ORDER -->
+        <div id="tabReportSection" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b bg-white space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800 uppercase">DAFTAR LAPORAN ORDER & RAB</h2>
+                            <p id="summaryText" class="text-xs text-gray-500 mt-0.5">Jumlah order: 0 | Total Kotor: Rp 0</p>
+                            <p class="text-[11px] text-orange-600 font-semibold mt-1">💡 Petunjuk: Klik pada <u>Nomor Invoice</u> untuk mengedit rincian transaksi atau memperbarui status pembayaran.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                            <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-lg transition shadow-sm text-xs uppercase flex-1 md:flex-none">
+                                EXPORT EXCEL (.XLSX)
+                            </button>
+                            <button onclick="openResetDbModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-lg transition shadow-sm text-xs uppercase flex-1 md:flex-none">
+                                RESET SEMUA DATA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table View Lengkap -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase font-bold border-b">
+                                <th class="p-3">Nomor / Tim</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Pemesan / WA</th>
+                                <th class="p-3">Tgl / Deadline</th>
+                                <th class="p-3 text-right">Qty</th>
+                                <th class="p-3 text-right">Total Omzet</th>
+                                <th class="p-3 text-right">Total Jasa</th>
+                                <th class="p-3 text-right">Biaya Bahan</th>
+                                <th class="p-3 text-right">Biaya Lainnya</th>
+                                <th class="p-3 text-right">Laba Bersih</th>
+                                <th class="p-3 text-center">Cetak Dokumen</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: BACKUP, RESTORE & SYSTEM MANAGEMENT -->
+        <div id="tabBackupSection" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                <div class="border-b pb-3">
+                    <h3 class="text-base font-extrabold text-gray-800 uppercase">1. EKSPORT & BACKUP DATABASE</h3>
+                    <p class="text-xs text-gray-500">Unduh cadangan data untuk pengamanan berkala atau analisis spreadsheet.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="exportBackupJSON()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3.5 px-4 rounded-xl transition shadow-sm uppercase flex items-center justify-center gap-2">
+                        📥 DOWNLOAD FILE BACKUP SYSTEM (.JSON)
+                    </button>
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3.5 px-4 rounded-xl transition shadow-sm uppercase flex items-center justify-center gap-2">
+                        📊 DOWNLOAD REPORT LAPORAN (.XLSX)
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                <div class="border-b pb-3">
+                    <h3 class="text-base font-extrabold text-gray-800 uppercase">2. RESTORE / PULIHKAN DATA</h3>
+                    <p class="text-xs text-gray-500">Unggah file backup `.json` untuk mengembalikan seluruh data transaksi konveksi.</p>
+                </div>
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-amber-900 uppercase">Pilih File Backup JSON:</label>
+                        <input type="file" id="importJsonFile" accept=".json" class="text-xs text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer">
+                    </div>
+                    <button onclick="importBackupJSON()" class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 px-5 rounded-lg transition shadow-sm uppercase whitespace-nowrap">
+                        🔄 PROSES RESTORE DATA
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
+                <div class="border-b pb-3">
+                    <h3 class="text-base font-extrabold text-gray-800 uppercase">3. PENGATURAN AKSES & AKUN ADMIN</h3>
+                    <p class="text-xs text-gray-500">Perbarui username dan password login aplikasi Renzani.co.</p>
+                </div>
+
+                <form onsubmit="handleUpdateCredentials(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Username Baru</label>
+                        <input type="text" id="newUsername" required class="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" placeholder="Username admin baru...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password Baru</label>
+                        <input type="password" id="newPassword" required class="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" placeholder="Password baru...">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-2.5 px-4 rounded-lg transition shadow-sm uppercase">
+                            💾 SIMPAN AKUN BARU
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="pt-6 pb-2 text-center text-xs text-gray-500 font-medium border-t border-gray-200 mt-8">
+            Renzani.co Web Application &copy; 2026 | System Developed by Urai Ikhsan Fadhilah
+        </footer>
+
+    </div>
+
+    <!-- JAVASCRIPT APLIKASI -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBebx-coOdyrX16br02EyQ8elYOs14PCKM",
+            authDomain: "konveksi-jersey.firebaseapp.com",
+            databaseURL: "https://konveksi-jersey-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "konveksi-jersey",
+            storageBucket: "konveksi-jersey.firebasestorage.app",
+            messagingSenderId: "760349189211",
+            appId: "1:760349189211:web:62608da529ef43d593cb7e"
+        };
+
+        let db = null;
+        let isCloudActive = false;
+
+        let authCredentials = JSON.parse(localStorage.getItem('jersey_auth_credentials')) || {
+            username: "admin",
+            password: "admin123"
+        };
+
+        let chartFinancialInstance = null;
+        let chartExpensesInstance = null;
+
+        if (firebaseConfig.apiKey) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                isCloudActive = true;
+            } catch (err) {
+                console.error("Firebase error:", err);
+            }
+        }
+
+        let currentUser = JSON.parse(sessionStorage.getItem('jersey_current_user')) || null;
+        let orders = JSON.parse(localStorage.getItem('jersey_orders_data')) || [];
+
+        window.onload = function() {
+            document.getElementById('loginUsername').value = authCredentials.username;
+            if (currentUser) {
+                showAppContent();
+            } else {
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        };
+
+        function formatWaNumber(phone) {
+            if (!phone) return '';
+            let cleaned = phone.replace(/\D/g, '');
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.slice(1);
+            }
+            return cleaned;
+        }
+
+        function sendWaInvoice(id) {
+            const o = orders.find(item => String(item.id) === String(id));
+            if (!o) return;
+
+            const phone = formatWaNumber(o.noHp);
+            if (!phone) {
+                alert("⚠️ Nomor WhatsApp/HP pelanggan belum diisi untuk transaksi ini!");
+                return;
+            }
+
+            const status = o.status || 'LUNAS';
+            const totalOmzet = formatRupiah(o.totalKotor);
+            const nominalDp = formatRupiah(o.nominalDp || 0);
+            const sisaTagihan = formatRupiah((o.totalKotor || 0) - (o.nominalDp || 0));
+
+            let statusText = "";
+            if (status === 'LUNAS') {
+                statusText = "🟢 *LUNAS*";
+            } else if (status === 'DP') {
+                statusText = `🟡 *DP (Uang Muka)*\n> Uang Muka (DP): ${nominalDp}\n> Sisa Tagihan: ${sisaTagihan}`;
+            } else {
+                statusText = "🔴 *BATAL / CANCEL*";
+            }
+
+            const msg = `Halo Kak *${o.nama}* 👋\nBerikut kami sampaikan rincian tagihan/invoice pesanan Anda di *Renzani.co*:\n\n📄 *No. Invoice:* ${o.nomor}\n📅 *Tanggal Order:* ${o.tanggal}\n🎯 *Tim/Event:* ${o.timEvent || '-'}\n👕 *Jumlah:* ${o.qty} pcs\n💰 *Total Tagihan:* ${totalOmzet}\n\n📌 *Status Pembayaran:* ${statusText}\n⏳ *Deadline Selesai:* ${o.deadline || '-'}\n\nTerima kasih telah mempercayakan produksi konveksi kepada *Renzani.co*! Jika ada kendala/pertanyaan, silakan hubungi kami. 🙏✨`;
+
+            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function toggleInputDp() {
+            const status = document.getElementById('statusBayar').value;
+            const container = document.getElementById('containerDp');
+            if (status === 'DP') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function toggleEditDpInput() {
+            const status = document.getElementById('editStatus').value;
+            const container = document.getElementById('editDpContainer');
+            if (status === 'DP') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function openResetDbModal() {
+            document.getElementById('resetPassphrase').value = '';
+            document.getElementById('resetDbModal').classList.remove('hidden');
+        }
+
+        function closeResetDbModal() {
+            document.getElementById('resetDbModal').classList.add('hidden');
+        }
+
+        function handleResetDatabase(e) {
+            e.preventDefault();
+            const inputFrasa = document.getElementById('resetPassphrase').value.trim();
+
+            if (inputFrasa !== "ResetData123#") {
+                alert("❌ Frasa keamanan rahasia salah!");
+                return;
+            }
+
+            orders = [];
+            localStorage.setItem('jersey_orders_data', JSON.stringify([]));
+
+            if (isCloudActive) {
+                db.ref('orders').remove();
+            }
+
+            renderTable();
+            generateInvoiceNumber();
+            closeResetDbModal();
+            alert("🎉 Database berhasil di-reset!");
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const inputUser = document.getElementById('loginUsername').value.trim();
+            const inputPwd = document.getElementById('loginPassword').value;
+            const errDiv = document.getElementById('loginError');
+
+            if (inputUser.toLowerCase() === authCredentials.username.toLowerCase() && inputPwd === authCredentials.password) {
+                currentUser = { name: authCredentials.username, role: 'admin' };
+                sessionStorage.setItem('jersey_current_user', JSON.stringify(currentUser));
+                errDiv.classList.add('hidden');
+                showAppContent();
+            } else {
+                errDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm("Keluar dari sistem Renzani.co?")) {
+                currentUser = null;
+                sessionStorage.removeItem('jersey_current_user');
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        }
+
+        function showAppContent() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+
+            const statusBadge = document.getElementById('cloudStatusBadge');
+
+            if (isCloudActive) {
+                statusBadge.innerText = "CLOUD ONLINE";
+                statusBadge.className = "text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-300 uppercase";
+
+                db.ref('orders').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        orders = Object.values(data).sort((a, b) => Number(b.id) - Number(a.id));
+                    } else {
+                        orders = [];
+                    }
+                    localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
+                    renderTable();
+                    generateInvoiceNumber();
+                });
+            } else {
+                statusBadge.innerText = "LOCAL MODE";
+                statusBadge.className = "text-[10px] bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded border border-gray-300 uppercase";
+                renderTable();
+                generateInvoiceNumber();
+            }
+
+            document.getElementById('tanggal').valueAsDate = new Date();
+            document.getElementById('deadline').valueAsDate = new Date();
+            
+            if (document.getElementById('newUsername')) {
+                document.getElementById('newUsername').value = authCredentials.username;
+            }
+
+            generateInvoiceNumber();
+            switchTab('analytics');
+        }
+
+        function switchTab(tab) {
+            const btnAnalytics = document.getElementById('tabBtnAnalytics');
+            const btnInput = document.getElementById('tabBtnInput');
+            const btnReport = document.getElementById('tabBtnReport');
+            const btnBackup = document.getElementById('tabBtnBackup');
+
+            const secAnalytics = document.getElementById('tabAnalyticsSection');
+            const secInput = document.getElementById('tabInputSection');
+            const secReport = document.getElementById('tabReportSection');
+            const secBackup = document.getElementById('tabBackupSection');
+
+            btnAnalytics.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap";
+            btnInput.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap";
+            btnReport.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap";
+            btnBackup.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition tracking-wide whitespace-nowrap";
+
+            secAnalytics.classList.add('hidden');
+            secInput.classList.add('hidden');
+            secReport.classList.add('hidden');
+            secBackup.classList.add('hidden');
+
+            if (tab === 'analytics') {
+                btnAnalytics.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-orange-600 text-orange-600 transition tracking-wide whitespace-nowrap";
+                secAnalytics.classList.remove('hidden');
+                renderTable();
+            } else if (tab === 'input') {
+                btnInput.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-orange-600 text-orange-600 transition tracking-wide whitespace-nowrap";
+                secInput.classList.remove('hidden');
+            } else if (tab === 'report') {
+                btnReport.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-orange-600 text-orange-600 transition tracking-wide whitespace-nowrap";
+                secReport.classList.remove('hidden');
+            } else if (tab === 'backup') {
+                btnBackup.className = "py-2.5 px-5 font-bold text-sm border-b-2 border-orange-600 text-orange-600 transition tracking-wide whitespace-nowrap";
+                secBackup.classList.remove('hidden');
+            }
+        }
+
+        function formatCurrencyInput(input) {
+            let value = input.value.replace(/\D/g, '');
+            input.value = value === '' ? '0' : Number(value).toLocaleString('id-ID');
+            calculateTotal();
+        }
+
+        function parseVal(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const raw = el.value.replace(/\D/g, '');
+            return raw ? Number(raw) : 0;
+        }
+
+        function calculateTotal() {
+            const qty = Number(document.getElementById('qty').value) || 0;
+            const hargaSatuan = parseVal('hargaSatuan');
+            
+            const potong = parseVal('biayaPotong');
+            const jahit = parseVal('biayaJahit');
+            const press = parseVal('biayaPress');
+            const kancing = parseVal('biayaKancing');
+            const packing = parseVal('biayaPacking');
+            const listrik = parseVal('biayaListrik');
+            
+            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
+            const totalJasaOps = totalJasaPerPcs * qty;
+            
+            const biayaBahan = parseVal('biayaBahan');
+            const biayaLainnya = parseVal('biayaLainnya');
+
+            const totalOmzet = qty * hargaSatuan;
+            const totalRABOps = totalJasaOps + biayaBahan + biayaLainnya;
+            const labaBersih = totalOmzet - totalRABOps;
+
+            document.getElementById('dispTotalKotor').innerText = formatRupiah(totalOmzet);
+            document.getElementById('dispTotalJasa').innerText = formatRupiah(totalJasaPerPcs);
+            document.getElementById('dispSisaBayar').innerText = formatRupiah(totalRABOps);
+            document.getElementById('dispTotalReal').innerText = formatRupiah(labaBersih);
+        }
+
+        function generateInvoiceNumber() {
+            const dateInput = document.getElementById('tanggal').value;
+            let dateFormatted = "";
+            if (dateInput) {
+                const [y, m, d] = dateInput.split('-');
+                dateFormatted = `${d}${m}${y}`;
+            } else {
+                const now = new Date();
+                dateFormatted = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+            }
+
+            let maxSeq = 0;
+            orders.forEach(o => {
+                if (o.nomor && o.nomor.startsWith('INV-')) {
+                    const parts = o.nomor.split('-');
+                    if (parts.length >= 2) {
+                        const seq = parseInt(parts[1], 10);
+                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+                    }
+                }
+            });
+
+            document.getElementById('nomor').value = `INV-${String(maxSeq + 1).padStart(5, '0')}-${dateFormatted}`;
+        }
+
+        function saveOrder(e) {
+            e.preventDefault();
+
+            const qty = Number(document.getElementById('qty').value) || 0;
+            const hargaSatuan = parseVal('hargaSatuan');
+            const potong = parseVal('biayaPotong');
+            const jahit = parseVal('biayaJahit');
+            const press = parseVal('biayaPress');
+            const kancing = parseVal('biayaKancing');
+            const packing = parseVal('biayaPacking');
+            const listrik = parseVal('biayaListrik');
+            
+            const statusBayar = document.getElementById('statusBayar').value;
+            const nominalDp = statusBayar === 'DP' ? parseVal('nominalDp') : (statusBayar === 'LUNAS' ? (qty * hargaSatuan) : 0);
+
+            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
+            const totalJasa = totalJasaPerPcs * qty;
+            
+            const biayaBahan = parseVal('biayaBahan');
+            const biayaLainnya = parseVal('biayaLainnya');
+
+            const totalKotor = qty * hargaSatuan;
+            const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+            const totalReal = totalKotor - totalRABOps;
+
+            const newOrder = {
+                id: Date.now(),
+                nomor: document.getElementById('nomor').value.trim().toUpperCase(),
+                nama: document.getElementById('nama').value.trim().toUpperCase(),
+                timEvent: document.getElementById('timEvent').value.trim().toUpperCase(),
+                noHp: document.getElementById('noHp').value.trim(),
+                tanggalRaw: document.getElementById('tanggal').value,
+                tanggal: formatDate(document.getElementById('tanggal').value),
+                deadlineRaw: document.getElementById('deadline').value,
+                deadline: formatDate(document.getElementById('deadline').value),
+                status: statusBayar,
+                nominalDp: nominalDp,
+                qty: qty,
+                hargaSatuan: hargaSatuan,
+                potong: potong,
+                jahit: jahit,
+                press: press,
+                kancing: kancing,
+                packing: packing,
+                listrik: listrik,
+                totalJasaPerPcs: totalJasaPerPcs,
+                totalJasa: totalJasa,
+                biayaBahan: biayaBahan,
+                biayaLainnya: biayaLainnya,
+                totalKotor: totalKotor,
+                totalRABOps: totalRABOps,
+                totalReal: totalReal
+            };
+
+            orders.unshift(newOrder);
+            localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
+
+            if (isCloudActive) {
+                db.ref('orders/' + newOrder.id).set(newOrder);
+            }
+
+            renderTable();
+            document.getElementById('orderForm').reset();
+            document.getElementById('tanggal').valueAsDate = new Date();
+            document.getElementById('deadline').valueAsDate = new Date();
+            document.getElementById('statusBayar').value = 'LUNAS';
+            toggleInputDp();
+            calculateTotal();
+            generateInvoiceNumber();
+
+            alert("✅ Transaksi & Status Pembayaran Berhasil Disimpan!");
+        }
+
+        function openEditModal(id) {
+            const o = orders.find(item => String(item.id) === String(id));
+            if (!o) return;
+
+            document.getElementById('editOrderId').value = o.id;
+            document.getElementById('editNomor').value = o.nomor;
+            document.getElementById('editNama').value = o.nama;
+            document.getElementById('editTimEvent').value = o.timEvent || '';
+            document.getElementById('editNoHp').value = o.noHp || '';
+            document.getElementById('editTanggal').value = o.tanggalRaw || '';
+            document.getElementById('editDeadline').value = o.deadlineRaw || '';
+
+            document.getElementById('editStatus').value = o.status || 'LUNAS';
+            document.getElementById('editNominalDp').value = Number(o.nominalDp || 0).toLocaleString('id-ID');
+            toggleEditDpInput();
+
+            document.getElementById('editQty').value = o.qty;
+            document.getElementById('editHargaSatuan').value = Number(o.hargaSatuan || 0).toLocaleString('id-ID');
+            document.getElementById('editBiayaBahan').value = Number(o.biayaBahan || 0).toLocaleString('id-ID');
+            document.getElementById('editBiayaLainnya').value = Number(o.biayaLainnya || 0).toLocaleString('id-ID');
+
+            document.getElementById('editPotong').value = Number(o.potong || 0).toLocaleString('id-ID');
+            document.getElementById('editJahit').value = Number(o.jahit || 0).toLocaleString('id-ID');
+            document.getElementById('editPress').value = Number(o.press || 0).toLocaleString('id-ID');
+            document.getElementById('editKancing').value = Number(o.kancing || 0).toLocaleString('id-ID');
+            document.getElementById('editPacking').value = Number(o.packing || 0).toLocaleString('id-ID');
+            document.getElementById('editListrik').value = Number(o.listrik || 0).toLocaleString('id-ID');
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function saveEditedOrder(e) {
+            e.preventDefault();
+            const id = document.getElementById('editOrderId').value;
+            const index = orders.findIndex(item => String(item.id) === String(id));
+            if (index === -1) return;
+
+            const qty = Number(document.getElementById('editQty').value) || 0;
+            const hargaSatuan = parseVal('editHargaSatuan');
+            const potong = parseVal('editPotong');
+            const jahit = parseVal('editJahit');
+            const press = parseVal('editPress');
+            const kancing = parseVal('editKancing');
+            const packing = parseVal('editPacking');
+            const listrik = parseVal('editListrik');
+
+            const statusBayar = document.getElementById('editStatus').value;
+            const nominalDp = statusBayar === 'DP' ? parseVal('editNominalDp') : (statusBayar === 'LUNAS' ? (qty * hargaSatuan) : 0);
+
+            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
+            const totalJasa = totalJasaPerPcs * qty;
+            const biayaBahan = parseVal('editBiayaBahan');
+            const biayaLainnya = parseVal('editBiayaLainnya');
+
+            const totalKotor = qty * hargaSatuan;
+            const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+            const totalReal = totalKotor - totalRABOps;
+
+            orders[index] = {
+                ...orders[index],
+                nama: document.getElementById('editNama').value.trim().toUpperCase(),
+                timEvent: document.getElementById('editTimEvent').value.trim().toUpperCase(),
+                noHp: document.getElementById('editNoHp').value.trim(),
+                tanggalRaw: document.getElementById('editTanggal').value,
+                tanggal: formatDate(document.getElementById('editTanggal').value),
+                deadlineRaw: document.getElementById('editDeadline').value,
+                deadline: formatDate(document.getElementById('editDeadline').value),
+                status: statusBayar,
+                nominalDp: nominalDp,
+                qty: qty,
+                hargaSatuan: hargaSatuan,
+                potong: potong,
+                jahit: jahit,
+                press: press,
+                kancing: kancing,
+                packing: packing,
+                listrik: listrik,
+                totalJasaPerPcs: totalJasaPerPcs,
+                totalJasa: totalJasa,
+                biayaBahan: biayaBahan,
+                biayaLainnya: biayaLainnya,
+                totalKotor: totalKotor,
+                totalRABOps: totalRABOps,
+                totalReal: totalReal
+            };
+
+            localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
+
+            if (isCloudActive) {
+                db.ref('orders/' + id).set(orders[index]);
+            }
+
+            renderTable();
+            closeEditModal();
+            alert("✅ Perubahan Invoice & Status Berhasil Diperbarui!");
+        }
+
+        function deleteOrder(id) {
+            if (confirm("Hapus data order & RAB ini secara permanen?")) {
+                const targetId = String(id);
+                orders = orders.filter(item => String(item.id) !== targetId);
+                localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
+
+                if (isCloudActive) {
+                    db.ref('orders/' + targetId).remove();
+                }
+
+                renderTable();
+                generateInvoiceNumber();
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        function formatRupiah(num) {
+            return "Rp " + Number(num).toLocaleString('id-ID');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            let sumTotalOmzet = 0;
+            let sumTotalJasa = 0;
+            let sumTotalBahan = 0;
+            let sumTotalLainnya = 0;
+            let sumTotalReal = 0;
+
+            let sumPotong = 0, sumJahit = 0, sumPress = 0, sumKancing = 0, sumPacking = 0, sumListrik = 0;
+
+            orders.forEach(o => {
+                const status = o.status || 'LUNAS';
+                const omzet = status === 'CANCEL' ? 0 : (o.totalKotor || 0);
+                const jasa = o.totalJasa || 0;
+                const bahan = o.biayaBahan || 0;
+                const lainnya = o.biayaLainnya || 0;
+                const real = status === 'CANCEL' ? 0 : (o.totalReal !== undefined ? o.totalReal : (omzet - jasa - bahan - lainnya));
+
+                if (status !== 'CANCEL') {
+                    sumTotalOmzet += omzet;
+                    sumTotalJasa += jasa;
+                    sumTotalBahan += bahan;
+                    sumTotalLainnya += lainnya;
+                    sumTotalReal += real;
+
+                    sumPotong += (o.potong || 0) * (o.qty || 1);
+                    sumJahit += (o.jahit || 0) * (o.qty || 1);
+                    sumPress += (o.press || 0) * (o.qty || 1);
+                    sumKancing += (o.kancing || 0) * (o.qty || 1);
+                    sumPacking += (o.packing || 0) * (o.qty || 1);
+                    sumListrik += (o.listrik || 0) * (o.qty || 1);
+                }
+
+                let badgeStatus = '';
+                if (status === 'LUNAS') {
+                    badgeStatus = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-black">LUNAS</span>`;
+                } else if (status === 'DP') {
+                    const sisa = (o.totalKotor || 0) - (o.nominalDp || 0);
+                    badgeStatus = `<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-black block">DP: ${formatRupiah(o.nominalDp || 0)}</span>
+                                   <span class="text-[9px] text-red-500 font-bold block mt-0.5">Sisa: ${formatRupiah(sisa)}</span>`;
+                } else {
+                    badgeStatus = `<span class="bg-red-100 text-red-800 border border-red-300 text-[10px] px-2 py-0.5 rounded-full font-black">CANCEL</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = status === 'CANCEL' ? "bg-red-50/40 opacity-70 border-b" : "hover:bg-gray-50 transition border-b";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <button onclick="openEditModal('${o.id}')" class="font-extrabold text-orange-600 hover:underline cursor-pointer text-left block">
+                            ${o.nomor} ✏️
+                        </button>
+                        <div class="text-[10px] text-gray-500">${o.timEvent || '-'}</div>
+                    </td>
+                    <td class="p-3">${badgeStatus}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-gray-800">${o.nama}</div>
+                        <div class="text-[10px] text-gray-500">${o.noHp || '-'}</div>
+                    </td>
+                    <td class="p-3">
+                        <div>${o.tanggal}</div>
+                        <div class="text-[10px] font-semibold text-red-500">DL: ${o.deadline || '-'}</div>
+                    </td>
+                    <td class="p-3 text-right font-bold">${o.qty}</td>
+                    <td class="p-3 text-right font-extrabold text-orange-900">${formatRupiah(o.totalKotor)}</td>
+                    <td class="p-3 text-right font-extrabold text-amber-700">${formatRupiah(jasa)}</td>
+                    <td class="p-3 text-right font-extrabold text-rose-700">${formatRupiah(bahan)}</td>
+                    <td class="p-3 text-right font-extrabold text-purple-700">${formatRupiah(lainnya)}</td>
+                    <td class="p-3 text-right font-extrabold text-emerald-700">${formatRupiah(real)}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openPrintInvoice('${o.id}')" class="bg-orange-50 text-orange-700 border border-orange-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">INV</button>
+                            <button onclick="openPrintSPK('${o.id}')" class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">SPK</button>
+                            <button onclick="openPrintRAB('${o.id}')" class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">RAB</button>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteOrder('${o.id}')" class="text-red-500 font-bold hover:underline text-[11px] uppercase">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('cardOmzet').innerText = formatRupiah(sumTotalOmzet);
+            document.getElementById('cardOperasional').innerText = formatRupiah(sumTotalJasa + sumTotalBahan + sumTotalLainnya);
+            document.getElementById('cardLaba').innerText = formatRupiah(sumTotalReal);
+            document.getElementById('cardPiutang').innerText = formatRupiah(sumTotalLainnya);
+
+            document.getElementById('summaryText').innerText = `Jumlah order: ${orders.length} | Total Omzet Aktif: ${formatRupiah(sumTotalOmzet)} | Laba Bersih: ${formatRupiah(sumTotalReal)}`;
+
+            renderCashflowTable();
+            renderCharts(sumTotalOmzet, sumTotalJasa + sumTotalBahan + sumTotalLainnya, sumTotalReal, sumPotong, sumJahit, sumPress, sumKancing, sumPacking, sumListrik);
+        }
+
+        function renderCashflowTable() {
+            const tbody = document.getElementById('cashflowTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const periodType = document.getElementById('cashflowPeriod').value;
+            let groupedData = {};
+
+            orders.forEach(o => {
+                if (!o.tanggalRaw || o.status === 'CANCEL') return;
+                const dateObj = new Date(o.tanggalRaw);
+                const year = dateObj.getFullYear();
+                let key = '';
+
+                if (periodType === 'monthly') {
+                    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                    key = `${monthNames[dateObj.getMonth()]} ${year}`;
+                } else {
+                    const q = Math.floor(dateObj.getMonth() / 3) + 1;
+                    key = `Triwulan Q${q} ${year}`;
+                }
+
+                if (!groupedData[key]) {
+                    groupedData[key] = { omzet: 0, ops: 0, net: 0 };
+                }
+
+                const omzet = o.totalKotor || 0;
+                const ops = o.totalRABOps || ((o.totalJasa || 0) + (o.biayaBahan || 0) + (o.biayaLainnya || 0));
+                
+                groupedData[key].omzet += omzet;
+                groupedData[key].ops += ops;
+                groupedData[key].net += (omzet - ops);
+            });
+
+            const keys = Object.keys(groupedData);
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data transaksi aktif untuk proyeksi arus kas.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(k => {
+                const item = groupedData[k];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b";
+                
+                let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                let statusText = "SURPLUS (SIAP TARIK DEVIDEN)";
+                if (item.net < 0) {
+                    badgeClass = "bg-red-100 text-red-800 border-red-300";
+                    statusText = "DEFISIT ARUS KAS";
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-gray-800">${k}</td>
+                    <td class="p-3 text-right font-bold text-orange-900">${formatRupiah(item.omzet)}</td>
+                    <td class="p-3 text-right font-bold text-amber-800">${formatRupiah(item.ops)}</td>
+                    <td class="p-3 text-right font-black text-emerald-700">${formatRupiah(item.net)}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${badgeClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCharts(omzet, pengeluaran, laba, potong, jahit, press, kancing, packing, listrik) {
+            const canvasFin = document.getElementById('chartFinancial');
+            if (canvasFin) {
+                const ctxFin = canvasFin.getContext('2d');
+                if (chartFinancialInstance) chartFinancialInstance.destroy();
+                chartFinancialInstance = new Chart(ctxFin, {
+                    type: 'bar',
+                    data: {
+                        labels: ['TOTAL OMZET', 'TOTAL OPERASIONAL', 'LABA BERSIH'],
+                        datasets: [{
+                            data: [omzet, pengeluaran, laba],
+                            backgroundColor: ['rgba(249, 115, 22, 0.85)', 'rgba(217, 119, 6, 0.85)', 'rgba(16, 185, 129, 0.85)'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+
+            const canvasExp = document.getElementById('chartExpenses');
+            if (canvasExp) {
+                const ctxExp = canvasExp.getContext('2d');
+                if (chartExpensesInstance) chartExpensesInstance.destroy();
+                chartExpensesInstance = new Chart(ctxExp, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Potong', 'Jahit', 'Press', 'Kancing', 'Packing', 'Listrik'],
+                        datasets: [{
+                            data: [potong, jahit, press, kancing, packing, listrik],
+                            backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308', '#a855f7', '#ec4899']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                });
+            }
+        }
+
+        function openPrintInvoice(id) {
+            const o = orders.find(item => String(item.id) === String(id));
+            if (!o) return;
+
+            const printContent = `
+                <div class="border-b-2 border-orange-600 pb-4 mb-4 flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <img src="Renzani.co_2.jpg" class="w-10 h-10 rounded-full border border-orange-500 object-cover" onerror="this.style.display='none';">
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-orange-600 tracking-wide">Renzani.co</h1>
+                            <p class="text-xs text-gray-600 font-semibold">Custom Apparel & Konveksi</p>
+                            <p class="text-[11px] text-gray-500">WhatsApp: ${o.noHp || '-'}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <h2 class="text-lg font-bold text-gray-800 uppercase">INVOICE PEMBAYARAN</h2>
+                        <p class="text-xs font-bold text-orange-600">${o.nomor}</p>
+                        <p class="text-xs text-gray-500">Tanggal: ${o.tanggal}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs mb-6 bg-gray-50 p-3 rounded-lg border">
+                    <div>
+                        <p class="text-gray-500 uppercase text-[10px] font-bold">PEMESAN / PELANGGAN:</p>
+                        <p class="font-bold text-gray-800 text-sm">${o.nama}</p>
+                        <p class="text-gray-600">Tim/Event: <b>${o.timEvent || '-'}</b></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500 uppercase text-[10px] font-bold">STATUS PEMBAYARAN:</p>
+                        <p class="font-black text-sm uppercase">${o.status || 'LUNAS'}</p>
+                        <p class="text-gray-500 text-[10px]">DL: ${o.deadline || '-'}</p>
+                    </div>
+                </div>
+
+                <table class="w-full text-xs text-left border-collapse mb-6">
+                    <thead>
+                        <tr class="border-b-2 border-gray-300 bg-gray-100 uppercase">
+                            <th class="p-2 font-bold">Deskripsi Pesanan</th>
+                            <th class="p-2 font-bold text-center">Qty</th>
+                            <th class="p-2 font-bold text-right">Harga Satuan</th>
+                            <th class="p-2 font-bold text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">Pesanan Custom Apparel (${o.timEvent || o.nama})</td>
+                            <td class="p-2 text-center font-bold">${o.qty} pcs</td>
+                            <td class="p-2 text-right">${formatRupiah(o.hargaSatuan)}</td>
+                            <td class="p-2 text-right font-bold">${formatRupiah(o.totalKotor)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="flex justify-end text-xs mb-8">
+                    <div class="w-64 space-y-1.5">
+                        <div class="flex justify-between"><span>Total Tagihan:</span><span>${formatRupiah(o.totalKotor)}</span></div>
+                        <div class="flex justify-between text-emerald-700 font-bold"><span>Uang Muka / DP:</span><span>${formatRupiah(o.nominalDp || 0)}</span></div>
+                        <div class="flex justify-between font-black text-sm border-t pt-1 text-red-600">
+                            <span>Sisa Tagihan:</span>
+                            <span>${formatRupiah((o.totalKotor || 0) - (o.nominalDp || 0))}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalActionButtons').innerHTML = `
+                <button onclick="sendWaInvoice('${o.id}')" class="bg-emerald-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1">
+                    📱 KIRIM KE WA
+                </button>
+                <button onclick="window.print()" class="bg-orange-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition">
+                    CETAK / SIMPAN PDF
+                </button>
+                <button onclick="closePrintModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 transition">
+                    TUTUP
+                </button>
+            `;
+
+            document.getElementById('printModalTitle').innerText = `INVOICE - ${o.nomor}`;
+            document.getElementById('printArea').innerHTML = printContent;
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function openPrintSPK(id) {
+            const o = orders.find(item => String(item.id) === String(id));
+            if (!o) return;
+
+            const printContent = `
+                <div class="border-b-2 border-gray-800 pb-3 mb-4 flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <img src="Renzani.co_2.jpg" class="w-10 h-10 rounded-full border border-orange-500 object-cover" onerror="this.style.display='none';">
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-gray-900">SURAT PERINTAH KERJA (SPK)</h1>
+                            <p class="text-xs font-bold text-orange-600 uppercase">Renzani.co Production Worksheet</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-gray-800">NO: ${o.nomor}</p>
+                        <p class="text-xs text-red-600 font-extrabold">DEADLINE: ${o.deadline || '-'}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs mb-4 bg-gray-100 p-3 rounded-lg border">
+                    <div>
+                        <p class="text-gray-500 uppercase text-[10px] font-bold">PEMESAN / TIM:</p>
+                        <p class="font-bold text-gray-900 text-sm">${o.nama} ${o.timEvent ? '(' + o.timEvent + ')' : ''}</p>
+                        <p class="text-gray-600 text-[11px] mt-1">Tanggal Order: <b>${o.tanggal}</b></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500 uppercase text-[10px] font-bold">TOTAL QTY PRODUKSI:</p>
+                        <p class="text-2xl font-black text-gray-900">${o.qty} <span class="text-xs font-normal">PCS</span></p>
+                    </div>
+                </div>
+
+                <!-- TABEL CONTROL PEKERJAAN BENGKEL -->
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-700 uppercase mb-2">CHECKLIST TAHAPAN WORKSHOP & QUALITY CONTROL</h4>
+                    <table class="w-full text-xs border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-800 uppercase text-[10px] border-b border-gray-300">
+                                <th class="border border-gray-300 p-2 text-left">Divisi Workstation</th>
+                                <th class="border border-gray-300 p-2 text-center w-24">Target Qty</th>
+                                <th class="border border-gray-300 p-2 text-center w-28">Tgl Selesai</th>
+                                <th class="border border-gray-300 p-2 text-center w-28">Paraf Petugas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 p-2 font-bold">1. Divisi Potong (Cutting)</td>
+                                <td class="border border-gray-300 p-2 text-center font-bold">${o.qty} pcs</td>
+                                <td class="border border-gray-300 p-2 text-center text-gray-400">.... / .... / 2026</td>
+                                <td class="border border-gray-300 p-2"></td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2 font-bold">2. Divisi Jahit (Sewing)</td>
+                                <td class="border border-gray-300 p-2 text-center font-bold">${o.qty} pcs</td>
+                                <td class="border border-gray-300 p-2 text-center text-gray-400">.... / .... / 2026</td>
+                                <td class="border border-gray-300 p-2"></td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2 font-bold">3. Divisi Press / Sublim / Sablon</td>
+                                <td class="border border-gray-300 p-2 text-center font-bold">${o.qty} pcs</td>
+                                <td class="border border-gray-300 p-2 text-center text-gray-400">.... / .... / 2026</td>
+                                <td class="border border-gray-300 p-2"></td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 p-2 font-bold">4. Divisi Finishing, QC & Packing</td>
+                                <td class="border border-gray-300 p-2 text-center font-bold">${o.qty} pcs</td>
+                                <td class="border border-gray-300 p-2 text-center text-gray-400">.... / .... / 2026</td>
+                                <td class="border border-gray-300 p-2"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- KOLOM PARAF SERAH TERIMA TASK -->
+                <div class="mt-6 pt-2">
+                    <h4 class="text-xs font-bold text-gray-700 uppercase mb-3 text-center">LEMBAR PENGESAHAN & SERAH TERIMA TASK WORKSHOP</h4>
+                    <div class="grid grid-cols-5 gap-2 text-center text-[10px]">
+                        <div class="border border-gray-300 p-2 rounded bg-gray-50/50">
+                            <p class="font-bold text-gray-800">Admin Order</p>
+                            <div class="h-12"></div>
+                            <p class="text-gray-400 border-t pt-1">( .................... )</p>
+                        </div>
+                        <div class="border border-gray-300 p-2 rounded bg-gray-50/50">
+                            <p class="font-bold text-gray-800">Div. Potong</p>
+                            <div class="h-12"></div>
+                            <p class="text-gray-400 border-t pt-1">( .................... )</p>
+                        </div>
+                        <div class="border border-gray-300 p-2 rounded bg-gray-50/50">
+                            <p class="font-bold text-gray-800">Div. Jahit</p>
+                            <div class="h-12"></div>
+                            <p class="text-gray-400 border-t pt-1">( .................... )</p>
+                        </div>
+                        <div class="border border-gray-300 p-2 rounded bg-gray-50/50">
+                            <p class="font-bold text-gray-800">Div. Press</p>
+                            <div class="h-12"></div>
+                            <p class="text-gray-400 border-t pt-1">( .................... )</p>
+                        </div>
+                        <div class="border border-gray-300 p-2 rounded bg-gray-50/50">
+                            <p class="font-bold text-gray-800">QC & Packing</p>
+                            <div class="h-12"></div>
+                            <p class="text-gray-400 border-t pt-1">( .................... )</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalActionButtons').innerHTML = `
+                <button onclick="window.print()" class="bg-orange-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition">
+                    CETAK / SIMPAN PDF
+                </button>
+                <button onclick="closePrintModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 transition">
+                    TUTUP
+                </button>
+            `;
+
+            document.getElementById('printModalTitle').innerText = `SPK PRODUKSI - ${o.nomor}`;
+            document.getElementById('printArea').innerHTML = printContent;
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function openPrintRAB(id) {
+            const o = orders.find(item => String(item.id) === String(id));
+            if (!o) return;
+
+            const printContent = `
+                <div class="border-b-2 border-emerald-600 pb-3 mb-4 flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                        <img src="Renzani.co_2.jpg" class="w-10 h-10 rounded-full border border-orange-500 object-cover" onerror="this.style.display='none';">
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-emerald-700">RENCANA ANGGARAN BIAYA (RAB)</h1>
+                            <p class="text-xs font-bold text-gray-600">Renzani.co Costing & Budget Plan</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-gray-800">NO PROJECT: ${o.nomor}</p>
+                        <p class="text-xs text-gray-500">Tanggal: ${o.tanggal}</p>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 mb-4 text-xs">
+                    <p><b>Nama Project/Pemesan:</b> ${o.nama} (${o.timEvent || '-'})</p>
+                    <p><b>Volume Produksi:</b> ${o.qty} pcs</p>
+                </div>
+
+                <table class="w-full text-xs text-left border-collapse mb-4">
+                    <thead>
+                        <tr class="bg-gray-100 uppercase border-b">
+                            <th class="p-2 font-bold">Item Komponen Biaya</th>
+                            <th class="p-2 font-bold text-right">Biaya / Pcs</th>
+                            <th class="p-2 font-bold text-right">Total Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr><td class="p-2">Jasa Potong</td><td class="p-2 text-right">${formatRupiah(o.potong || 0)}</td><td class="p-2 text-right">${formatRupiah((o.potong || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2">Jasa Jahit</td><td class="p-2 text-right">${formatRupiah(o.jahit || 0)}</td><td class="p-2 text-right">${formatRupiah((o.jahit || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2">Jasa Press</td><td class="p-2 text-right">${formatRupiah(o.press || 0)}</td><td class="p-2 text-right">${formatRupiah((o.press || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2">Jasa Kancing</td><td class="p-2 text-right">${formatRupiah(o.kancing || 0)}</td><td class="p-2 text-right">${formatRupiah((o.kancing || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2">Jasa Packing</td><td class="p-2 text-right">${formatRupiah(o.packing || 0)}</td><td class="p-2 text-right">${formatRupiah((o.packing || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2">Listrik Overhead</td><td class="p-2 text-right">${formatRupiah(o.listrik || 0)}</td><td class="p-2 text-right">${formatRupiah((o.listrik || 0) * o.qty)}</td></tr>
+                        <tr><td class="p-2 font-bold">Biaya Bahan Baku</td><td class="p-2 text-right">-</td><td class="p-2 text-right font-bold">${formatRupiah(o.biayaBahan || 0)}</td></tr>
+                        <tr><td class="p-2 font-bold">Biaya Lainnya (Aksesoris/Ongkir)</td><td class="p-2 text-right">-</td><td class="p-2 text-right font-bold">${formatRupiah(o.biayaLainnya || 0)}</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="flex justify-end text-xs mb-6">
+                    <div class="w-72 space-y-1">
+                        <div class="flex justify-between font-bold"><span>Total Estimasi RAB Ops:</span><span>${formatRupiah(o.totalRABOps || 0)}</span></div>
+                        <div class="flex justify-between font-bold text-orange-600"><span>Target Omzet:</span><span>${formatRupiah(o.totalKotor)}</span></div>
+                        <div class="flex justify-between font-black text-emerald-700 text-sm border-t pt-1"><span>Proyeksi Laba Bersih:</span><span>${formatRupiah(o.totalReal)}</span></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalActionButtons').innerHTML = `
+                <button onclick="window.print()" class="bg-orange-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition">
+                    CETAK / SIMPAN PDF
+                </button>
+                <button onclick="closePrintModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 transition">
+                    TUTUP
+                </button>
+            `;
+
+            document.getElementById('printModalTitle').innerText = `DOKUMEN RAB - ${o.nomor}`;
+            document.getElementById('printArea').innerHTML = printContent;
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        function exportToExcel() {
+            if (orders.length === 0) {
+                alert("Tidak ada data order untuk di-export!");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            const excelData = orders.map(o => ({
+                "Nomor Invoice": o.nomor,
+                "Status Pembayaran": o.status || 'LUNAS',
+                "Nominal DP": o.nominalDp || 0,
+                "Nama Pemesan": o.nama,
+                "Tim / Event": o.timEvent || '-',
+                "No. WhatsApp": o.noHp || '-',
+                "Tanggal Order": o.tanggal,
+                "Deadline": o.deadline || '-',
+                "Qty (Pcs)": o.qty,
+                "Harga Satuan": o.hargaSatuan,
+                "Total Omzet": o.totalKotor,
+                "Potong / Pcs": o.potong || 0,
+                "Jahit / Pcs": o.jahit || 0,
+                "Press / Pcs": o.press || 0,
+                "Kancing / Pcs": o.kancing || 0,
+                "Packing / Pcs": o.packing || 0,
+                "Listrik / Pcs": o.listrik || 0,
+                "Total Jasa Ops": o.totalJasa || 0,
+                "Biaya Bahan Baku": o.biayaBahan || 0,
+                "Biaya Lainnya": o.biayaLainnya || 0,
+                "Total RAB HPP": o.totalRABOps || 0,
+                "Laba Bersih": o.totalReal || 0
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, ws, "Monitoring Biaya Renzani");
+            XLSX.writeFile(wb, `Laporan_Renzani_Co_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function exportBackupJSON() {
+            const backupObj = {
+                app: "Renzani.co Pembukuan",
+                version: "3.3.6",
+                lastUpdated: new Date().toISOString(),
+                authCredentials: authCredentials,
+                orders: orders
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `database_renzani_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importBackupJSON() {
+            const fileInput = document.getElementById('importJsonFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("⚠️ Silakan pilih file backup (.JSON) terlebih dahulu!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && Array.isArray(data.orders)) {
+                        if (confirm(`Apakah Anda yakin ingin mengembalikan ${data.orders.length} data order dari backup?`)) {
+                            orders = data.orders;
+                            localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
+
+                            if (isCloudActive && db) {
+                                const updates = {};
+                                orders.forEach(item => {
+                                    updates['orders/' + item.id] = item;
+                                });
+                                db.ref().update(updates);
+                            }
+
+                            renderTable();
+                            generateInvoiceNumber();
+                            alert("🎉 Data berhasil dipulihkan dari file backup JSON!");
+                        }
+                    } else {
+                        alert("❌ Format file JSON tidak valid!");
+                    }
+                } catch (err) {
+                    alert("❌ Gagal membaca file backup JSON!");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleUpdateCredentials(e) {
+            e.preventDefault();
+            const newAdmin = document.getElementById('newUsername').value.trim();
+            const newPass = document.getElementById('newPassword').value;
+
+            if (!newAdmin || !newPass) {
+                alert("Username dan Password baru tidak boleh kosong!");
+                return;
+            }
+
+            authCredentials = { username: newAdmin, password: newPass };
+            localStorage.setItem('jersey_auth_credentials', JSON.stringify(authCredentials));
+            alert("✅ Username & Password Admin berhasil diperbarui!");
+        }
+    </script>
+</body>
+</html>
