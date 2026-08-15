@@ -616,6 +616,24 @@
                         <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
+
+                <!-- PAGINATION CONTROLS (TOMBOL HALAMAN) -->
+                <div class="p-4 border-t bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="text-xs font-semibold text-gray-600" id="paginationInfo">
+                        Menampilkan 0 - 0 dari 0 order
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="changePage(-1)" id="btnPrevPage" class="px-3.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed uppercase shadow-sm">
+                            ◀ Sebelumnya
+                        </button>
+                        <span id="pageNumberBadge" class="text-xs font-extrabold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200">
+                            Halaman 1 dari 1
+                        </span>
+                        <button type="button" onclick="changePage(1)" id="btnNextPage" class="px-3.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed uppercase shadow-sm">
+                            Selanjutnya ▶
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -807,6 +825,10 @@
         let isCloudActive = false;
         let dirHandle = null;
 
+        // VARIABEL PAGINASI HALAMAN
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
         // MASTER DATA SPEK APPAREL PRESET
         let masterData = JSON.parse(localStorage.getItem('jersey_master_data')) || {
             jenisOrder: ["Print Press", "Full Order"],
@@ -853,6 +875,11 @@
                 document.getElementById('appContainer').classList.add('hidden');
             }
         };
+
+        function changePage(dir) {
+            currentPage += dir;
+            renderTable();
+        }
 
         // TOAST NOTIFICATION SYSTEM
         function showToast(msg, type = 'success') {
@@ -1481,6 +1508,7 @@
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             let sumTotalOmzet = 0;
@@ -1491,6 +1519,7 @@
 
             let sumPotong = 0, sumJahit = 0, sumPress = 0, sumKancing = 0, sumPacking = 0, sumListrik = 0;
 
+            // 1. Kalkulasi Total Seluruh Data Order
             orders.forEach(o => {
                 const status = o.status || 'LUNAS';
                 const omzet = status === 'CANCEL' ? 0 : (o.totalKotor || 0);
@@ -1513,6 +1542,25 @@
                     sumPacking += (o.packing || 0) * (o.qty || 1);
                     sumListrik += (o.listrik || 0) * (o.qty || 1);
                 }
+            });
+
+            // 2. Logika Pemotongan 10 Data per Halaman
+            const totalPages = Math.ceil(orders.length / rowsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedOrders = orders.slice(startIdx, endIdx);
+
+            // 3. Render Baris Tabel (Khusus 10 Data Terpilih)
+            paginatedOrders.forEach(o => {
+                const status = o.status || 'LUNAS';
+                const omzet = status === 'CANCEL' ? 0 : (o.totalKotor || 0);
+                const jasa = o.totalJasa || 0;
+                const bahan = o.biayaBahan || 0;
+                const lainnya = o.biayaLainnya || 0;
+                const real = status === 'CANCEL' ? 0 : (o.totalReal !== undefined ? o.totalReal : (omzet - jasa - bahan - lainnya));
 
                 let badgeStatus = '';
                 if (status === 'LUNAS') {
@@ -1564,12 +1612,28 @@
                 tbody.appendChild(tr);
             });
 
+            // 4. Update Ringkasan Angka & Keterangan Halaman
             document.getElementById('cardOmzet').innerText = formatRupiah(sumTotalOmzet);
             document.getElementById('cardOperasional').innerText = formatRupiah(sumTotalJasa + sumTotalBahan + sumTotalLainnya);
             document.getElementById('cardLaba').innerText = formatRupiah(sumTotalReal);
             document.getElementById('cardPiutang').innerText = formatRupiah(sumTotalLainnya);
-
             document.getElementById('summaryText').innerText = `Jumlah order: ${orders.length} | Total Omzet Aktif: ${formatRupiah(sumTotalOmzet)} | Laba Bersih: ${formatRupiah(sumTotalReal)}`;
+
+            // Update Kontrol Tombol Halaman
+            const paginationInfo = document.getElementById('paginationInfo');
+            const btnPrev = document.getElementById('btnPrevPage');
+            const btnNext = document.getElementById('btnNextPage');
+            const pageBadge = document.getElementById('pageNumberBadge');
+
+            if (paginationInfo) {
+                const fromCount = orders.length === 0 ? 0 : startIdx + 1;
+                const toCount = Math.min(endIdx, orders.length);
+                paginationInfo.innerText = `Menampilkan ${fromCount} - ${toCount} dari ${orders.length} order`;
+            }
+
+            if (pageBadge) pageBadge.innerText = `Halaman ${currentPage} dari ${totalPages}`;
+            if (btnPrev) btnPrev.disabled = (currentPage === 1);
+            if (btnNext) btnNext.disabled = (currentPage === totalPages || orders.length === 0);
 
             renderCashflowTable();
             renderCharts(sumTotalOmzet, sumTotalJasa + sumTotalBahan + sumTotalLainnya, sumTotalReal, sumPotong, sumJahit, sumPress, sumKancing, sumPacking, sumListrik);
@@ -1779,7 +1843,6 @@
             document.getElementById('printModal').classList.remove('hidden');
         }
 
-        // STRUK THERMAL 58MM DENGAN ROBUST HTML2CANVAS FALLBACK
         function openThermalInvoice(id) {
             const o = orders.find(item => String(item.id) === String(id));
             if (!o) return;
@@ -1788,7 +1851,6 @@
 
             const printContent = `
                 <div id="thermalReceiptContainer" class="thermal-receipt shadow-md border p-2">
-                    <!-- HEADER LOGO & ALAMAT SESUAI GAMBAR -->
                     <div class="text-center mb-2">
                         <img src="Renzani.co_2.jpg" class="w-24 h-auto mx-auto mb-1 object-contain" onerror="this.style.display='none';">
                         <div class="font-extrabold text-[10px] uppercase leading-tight mt-1 tracking-tight">RENZANI MANUFACTURING SUBLIM PRINTING</div>
@@ -1868,7 +1930,6 @@
 
             showToast("⏳ Memproses gambar struk...", "info");
 
-            // Percobaan pertama dengan CORS & Taint
             html2canvas(receiptElement, {
                 scale: 3,
                 backgroundColor: "#ffffff",
@@ -1883,7 +1944,6 @@
             }).catch(err => {
                 console.warn("Html2canvas trial 1 failed, running local fallback...", err);
                 
-                // Fallback otomatis jika terkendala akses lokal file:// pada gambar logo
                 html2canvas(receiptElement, {
                     scale: 3,
                     backgroundColor: "#ffffff",
