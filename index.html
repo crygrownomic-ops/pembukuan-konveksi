@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Renzani.co - Pembukuan Konveksi & Sistem RAB</title>
+    <title>Renzani.co - Pembukuan Konveksi Multi-Item & RAB</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS Excel CDN -->
@@ -36,9 +36,16 @@
             font-size: 11px;
             line-height: 1.2;
         }
+
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800 flex flex-col justify-between">
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800 flex flex-col justify-between no-select">
 
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -51,7 +58,7 @@
                 <h2 class="text-2xl font-black text-gray-800 tracking-wide">Renzani.co</h2>
                 <p class="text-xs text-gray-500 font-semibold mt-0.5">Sistem Pembukuan Konveksi & Management RAB</p>
                 <div class="mt-2">
-                    <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-0.5 rounded-full border border-orange-300">v3.4.3 Thermal Robust Edition</span>
+                    <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-0.5 rounded-full border border-orange-300">v3.5.0 Multi-Item Order Edition</span>
                 </div>
             </div>
 
@@ -76,16 +83,16 @@
             </form>
 
             <div class="mt-6 pt-4 border-t border-gray-100 text-center text-[11px] text-gray-400">
-                Renzani.co Web Application &copy; 2026 | System Version 3.4.3
+                Renzani.co Web Application &copy; 2026 | System Version 3.5.0
             </div>
         </div>
     </div>
 
-    <!-- MODAL EDIT INVOICE & STATUS -->
+    <!-- MODAL EDIT INVOICE & STATUS MULTI-ITEM -->
     <div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-extrabold text-gray-800 text-sm uppercase">✏️ EDIT TRANSAKSI & SPESIFIKASI ORDER</h3>
+                <h3 class="font-extrabold text-gray-800 text-sm uppercase">✏️ EDIT TRANSAKSI & RINCIAN MULTI-ITEM ORDER</h3>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
             </div>
 
@@ -119,37 +126,6 @@
                     </div>
                 </div>
 
-                <!-- SPESIFIKASI PRODUK (EDIT) -->
-                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-2">
-                    <label class="block text-xs font-extrabold text-blue-900 uppercase">👕 SPESIFIKASI PRODUKSI (EDIT)</label>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Jenis Order</span>
-                            <select id="editJenisOrder" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Jenis Lengan</span>
-                            <select id="editJenis" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Type Custom</span>
-                            <select id="editTypeCustom" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Type Cutting</span>
-                            <select id="editTypeCutting" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Type Kerah</span>
-                            <select id="editTypeKerah" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-blue-800 font-bold uppercase block">Bahan Kain</span>
-                            <select id="editBahan" class="w-full border rounded p-1.5 text-xs font-bold bg-white"></select>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-extrabold text-amber-900 uppercase mb-1">STATUS PEMBAYARAN</label>
@@ -165,53 +141,15 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Qty (Pcs)</label>
-                        <input type="number" id="editQty" required min="1" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
+                <!-- CONTAINER ITEM PEMESANAN EDIT -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">👕 DAFTAR ITEM PESANAN (EDIT)</h4>
+                        <button type="button" onclick="addEditItemRow()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-700 transition uppercase">
+                            ➕ Tambah Item
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Harga Satuan (Rp)</label>
-                        <input type="text" id="editHargaSatuan" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Bahan Baku (Rp)</label>
-                        <input type="text" id="editBiayaBahan" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Biaya Lainnya (Rp)</label>
-                        <input type="text" id="editBiayaLainnya" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold">
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                    <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-2">RINCIAN BIAYA JASA PER PCS (RP)</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Potong</span>
-                            <input type="text" id="editPotong" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Jahit</span>
-                            <input type="text" id="editJahit" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Press</span>
-                            <input type="text" id="editPress" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Kancing</span>
-                            <input type="text" id="editKancing" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Packing</span>
-                            <input type="text" id="editPacking" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                        <div>
-                            <span class="text-[10px] block text-gray-500 font-bold">Listrik</span>
-                            <input type="text" id="editListrik" oninput="formatCurrencyInput(this)" class="w-full border rounded p-1.5 text-xs font-bold">
-                        </div>
-                    </div>
+                    <div id="editItemsContainer" class="space-y-4"></div>
                 </div>
 
                 <div class="flex gap-2 pt-2">
@@ -295,7 +233,7 @@
 
             <div class="flex flex-wrap items-center gap-2 md:gap-3">
                 <span id="userBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300 uppercase">
-                    ADMIN (FULL ACCESS)
+                    ADMIN (MULTI-ITEM ACCESS)
                 </span>
 
                 <button onclick="handleLogout()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition uppercase">
@@ -393,20 +331,20 @@
             </div>
         </div>
 
-        <!-- TAB 2: INPUT ORDER & RAB BARU -->
+        <!-- TAB 2: INPUT ORDER & RAB BARU (MULTI-ITEM) -->
         <div id="tabInputSection" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                 <div class="flex justify-between items-center mb-4 border-b pb-3">
                     <div>
                         <h2 class="text-lg font-bold text-gray-800 uppercase">FORM INPUT TRANSAKSI ORDER & ESTIMASI RAB</h2>
-                        <p class="text-xs text-gray-500">Pilih status pembayaran (LUNAS/DP/CANCEL) untuk pencatatan kas yang tepat.</p>
+                        <p class="text-xs text-gray-500">Satu invoice dapat memuat lebih dari satu jenis item/produk yang berbeda.</p>
                     </div>
-                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-full uppercase">Renzani v3.4.3</span>
+                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-full uppercase">Renzani v3.5.0</span>
                 </div>
 
                 <form id="orderForm" onsubmit="saveOrder(event)" class="space-y-6">
                     <!-- INFORMASI UMUM -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nomor Invoice</label>
                             <input type="text" id="nomor" required class="w-full bg-orange-50 border border-orange-300 text-orange-900 font-extrabold rounded-lg p-2.5 text-sm outline-none uppercase">
@@ -436,47 +374,6 @@
                             <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tanggal Deadline</label>
                             <input type="date" id="deadline" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Qty Pesanan (Pcs)</label>
-                            <input type="number" id="qty" value="1" min="1" oninput="calculateTotal()" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-orange-900 uppercase mb-1">Harga Satuan Jual (Rp)</label>
-                            <input type="text" id="hargaSatuan" value="0" oninput="formatCurrencyInput(this)" required class="w-full border border-orange-200 bg-orange-50/30 rounded-lg p-2.5 text-sm font-bold text-orange-900 outline-none">
-                        </div>
-                    </div>
-
-                    <!-- SPESIFIKASI APPAREL -->
-                    <div class="bg-blue-50/60 border border-blue-200 p-4 rounded-xl space-y-3">
-                        <h3 class="text-xs font-extrabold text-blue-900 uppercase border-b border-blue-200 pb-2">👕 ATRIBUT & SPESIFIKASI PRODUKSI APPAREL</h3>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Jenis Order</label>
-                                <select id="inputJenisOrder" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Jenis Lengan</label>
-                                <select id="inputJenis" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Type Custom</label>
-                                <select id="inputTypeCustom" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Type Cutting</label>
-                                <select id="inputTypeCutting" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Type Kerah</label>
-                                <select id="inputTypeKerah" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-blue-800 uppercase mb-1">Bahan Kain</label>
-                                <select id="inputBahan" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-bold bg-white outline-none"></select>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- STATUS PEMBAYARAN -->
@@ -495,65 +392,34 @@
                         </div>
                     </div>
 
-                    <!-- RINCIAN BIAYA JASA & OPERASIONAL -->
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">RINCIAN BIAYA JASA & OPERASIONAL PER PCS (UNTUK MONITORING EXCEL & RAB)</h3>
-                        
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Potong (Rp/Pcs)</label>
-                                <input type="text" id="biayaPotong" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Jahit (Rp/Pcs)</label>
-                                <input type="text" id="biayaJahit" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Press (Rp/Pcs)</label>
-                                <input type="text" id="biayaPress" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Kancing (Rp/Pcs)</label>
-                                <input type="text" id="biayaKancing" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Packing (Rp/Pcs)</label>
-                                <input type="text" id="biayaPacking" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Listrik (Rp/Pcs)</label>
-                                <input type="text" id="biayaListrik" value="0" oninput="formatCurrencyInput(this)" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold outline-none">
-                            </div>
+                    <!-- CONTAINER ITEM PESANAN DENGAN TOMBOL TAMBAH ITEM -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-sm font-extrabold text-gray-800 uppercase">👕 RINCIAN ITEM & SPESIFIKASI PESANAN</h3>
+                            <button type="button" onclick="addItemRow()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow flex items-center gap-1 uppercase">
+                                ➕ Tambah Item Order
+                            </button>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                            <div>
-                                <label class="block text-xs font-extrabold text-rose-700 uppercase mb-1">Biaya Bahan Baku (Rp)</label>
-                                <input type="text" id="biayaBahan" value="0" oninput="formatCurrencyInput(this)" class="w-full border-2 border-rose-300 bg-rose-50 rounded-lg p-2 text-xs font-extrabold text-rose-800 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-extrabold text-amber-800 uppercase mb-1">Biaya Lainnya (Rp)</label>
-                                <input type="text" id="biayaLainnya" value="0" oninput="formatCurrencyInput(this)" class="w-full border-2 border-amber-300 bg-amber-50 rounded-lg p-2 text-xs font-extrabold text-amber-900 outline-none" placeholder="Aksesoris, ongkir, dll">
-                            </div>
-                        </div>
+                        <div id="itemsContainer" class="space-y-4"></div>
                     </div>
 
                     <!-- CARD RINGKASAN LIVE -->
                     <div class="bg-gradient-to-r from-slate-900 to-orange-950 text-white p-5 rounded-2xl shadow-lg border border-slate-800 space-y-3">
                         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                             <h3 class="text-xs font-extrabold uppercase tracking-wider text-orange-400">
-                                KALKULASI REAL-TIME RAB & LABA
+                                KALKULASI REAL-TIME RAB & LABA (GABUNGAN SELURUH ITEM)
                             </h3>
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Omzet</p>
-                                <p id="dispTotalKotor" class="text-lg font-black text-orange-300">Rp 0</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Volume Qty</p>
+                                <p id="dispTotalQty" class="text-lg font-black text-sky-300">0 Pcs</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Biaya Jasa / Pcs</p>
-                                <p id="dispTotalJasa" class="text-lg font-black text-amber-300">Rp 0</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Omzet</p>
+                                <p id="dispTotalKotor" class="text-lg font-black text-orange-300">Rp 0</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-slate-400 font-bold uppercase">Total RAB Operasional</p>
@@ -567,7 +433,7 @@
                     </div>
 
                     <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 text-sm uppercase">
-                        SIMPAN TRANSAKSI & GENERATE RAB
+                        SIMPAN TRANSAKSI & GENERATE RAB MULTI-ITEM
                     </button>
                 </form>
             </div>
@@ -594,7 +460,7 @@
                     </div>
                 </div>
 
-                <!-- Table View Lengkap dengan Rapi Tanpa Wrap Angka -->
+                <!-- Table View Lengkap -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
@@ -603,7 +469,7 @@
                                 <th class="p-2.5">Status</th>
                                 <th class="p-2.5">Pemesan / WA</th>
                                 <th class="p-2.5">Tgl / Deadline</th>
-                                <th class="p-2.5 text-right">Qty</th>
+                                <th class="p-2.5 text-right">Total Qty</th>
                                 <th class="p-2.5 text-right">Total Omzet</th>
                                 <th class="p-2.5 text-right">Total Jasa</th>
                                 <th class="p-2.5 text-right">Biaya Bahan</th>
@@ -617,7 +483,7 @@
                     </table>
                 </div>
 
-                <!-- PAGINATION CONTROLS (TOMBOL HALAMAN) -->
+                <!-- PAGINATION CONTROLS -->
                 <div class="p-4 border-t bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div class="text-xs font-semibold text-gray-600" id="paginationInfo">
                         Menampilkan 0 - 0 dari 0 order
@@ -750,7 +616,6 @@
                     <p class="text-xs text-gray-500">Hubungkan aplikasi dengan folder khusus di penyimpanan lokal komputer (Drive C: atau D:) untuk sinkronisasi otomatis hibrida.</p>
                 </div>
 
-                <!-- Fallback Notice Browser -->
                 <div id="browserApiNotice" class="hidden bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-semibold">
                     ⚠️ Browser Anda saat ini (Safari/Firefox/Mobile) tidak mendukung File System Access API. Untuk menggunakan fitur tautkan folder Drive C/D lokal ini, harap gunakan browser <b>Google Chrome</b> atau <b>Microsoft Edge</b> di Komputer/Desktop.
                 </div>
@@ -777,7 +642,7 @@
             <!-- PENGATURAN AKSES & AKUN ADMIN -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-4">
                 <div class="border-b pb-3">
-                    <h3 class="text-base font-extrabold text-gray-800 uppercase">4. PENGATURAN AKSES, AKUN & FRASA RESET</h3>
+                    <h3 class="text-base font-extrabold text-gray-800 uppercase">4. PENGATURAN AKSES, AKUN & FRASA RESET (ENCRYPTED)</h3>
                     <p class="text-xs text-gray-500">Perbarui username, password, dan frasa rahasia reset database aplikasi Renzani.co.</p>
                 </div>
 
@@ -811,6 +676,26 @@
 
     <!-- JAVASCRIPT APLIKASI -->
     <script>
+        // 🛡️ FITUR PROTEKSI BROWSER
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 123 || 
+               (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
+               (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // 🔒 FUNGSI HASH ENKRIPSI SHA-256 NATIVE
+        async function hashSHA256(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyBebx-coOdyrX16br02EyQ8elYOs14PCKM",
             authDomain: "konveksi-jersey.firebaseapp.com",
@@ -839,11 +724,10 @@
             bahan: ["Dryfit Milano", "Dryfit Brazil", "Dryfit Evertone", "Embos Topo", "Drifit waffel", "Lotto", "Diadora", "Taslan"]
         };
 
-        // KREDENSIAL AUTH & FRASA RESET DINAMIS
         let authCredentials = JSON.parse(localStorage.getItem('jersey_auth_credentials')) || {
             username: "admin",
-            password: "admin123",
-            resetPassphrase: "ResetData123#"
+            passwordHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+            resetPassphraseHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
         };
 
         let chartFinancialInstance = null;
@@ -864,7 +748,6 @@
 
         window.onload = function() {
             document.getElementById('loginUsername').value = authCredentials.username;
-            populateMasterDropdowns();
             renderMasterDataManagement();
             checkBrowserCompatibility();
 
@@ -881,7 +764,6 @@
             renderTable();
         }
 
-        // TOAST NOTIFICATION SYSTEM
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -916,21 +798,8 @@
             }
         }
 
-        function populateMasterDropdowns() {
-            const keys = ['jenisOrder', 'jenis', 'typeCustom', 'typeCutting', 'typeKerah', 'bahan'];
-            keys.forEach(k => {
-                const capitalizedKey = k.charAt(0).toUpperCase() + k.slice(1);
-                
-                const inputEl = document.getElementById(`input${capitalizedKey}`);
-                const editEl = document.getElementById(`edit${capitalizedKey}`);
-
-                if (inputEl) {
-                    inputEl.innerHTML = masterData[k].map(opt => `<option value="${opt}">${opt}</option>`).join('');
-                }
-                if (editEl) {
-                    editEl.innerHTML = masterData[k].map(opt => `<option value="${opt}">${opt}</option>`).join('');
-                }
-            });
+        function getMasterOptionsHTML(key, selectedVal = '') {
+            return masterData[key].map(opt => `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>${opt}</option>`).join('');
         }
 
         function renderMasterDataManagement() {
@@ -956,7 +825,6 @@
             if (!masterData[key].includes(val)) {
                 masterData[key].push(val);
                 localStorage.setItem('jersey_master_data', JSON.stringify(masterData));
-                populateMasterDropdowns();
                 renderMasterDataManagement();
                 input.value = '';
                 showToast("✅ Master data berhasil ditambahkan!", "success");
@@ -969,10 +837,209 @@
             if (confirm("Hapus opsi ini dari master data?")) {
                 masterData[key].splice(idx, 1);
                 localStorage.setItem('jersey_master_data', JSON.stringify(masterData));
-                populateMasterDropdowns();
                 renderMasterDataManagement();
                 showToast("🗑️ Opsi berhasil dihapus", "success");
             }
+        }
+
+        // LOGIKA DYNAMIC MULTI-ITEM ROWS (FORM INPUT)
+        let itemIndexCounter = 0;
+
+        function addItemRow(data = null) {
+            const container = document.getElementById('itemsContainer');
+            if (!container) return;
+
+            const id = itemIndexCounter++;
+            const itemDiv = document.createElement('div');
+            itemDiv.id = `itemRow_${id}`;
+            itemDiv.className = "bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 space-y-4 relative shadow-sm";
+
+            const countItem = container.children.length + 1;
+
+            itemDiv.innerHTML = `
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-xs font-black text-orange-600 uppercase">Item #${countItem} Pesanan</span>
+                    <button type="button" onclick="removeItemRow(${id})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-100 border border-red-300 px-2.5 py-1 rounded-lg uppercase">
+                        🗑️ Hapus Item
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Jenis Order</label>
+                        <select class="item-jenisOrder w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('jenisOrder', data?.jenisOrder)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Jenis Lengan</label>
+                        <select class="item-jenis w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('jenis', data?.jenis)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Type Custom</label>
+                        <select class="item-typeCustom w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('typeCustom', data?.typeCustom)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Type Cutting</label>
+                        <select class="item-typeCutting w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('typeCutting', data?.typeCutting)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Type Kerah</label>
+                        <select class="item-typeKerah w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('typeKerah', data?.typeKerah)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Bahan Kain</label>
+                        <select class="item-bahan w-full border rounded-lg p-1.5 text-xs font-bold bg-white">${getMasterOptionsHTML('bahan', data?.bahan)}</select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 rounded-xl border">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Qty (Pcs)</label>
+                        <input type="number" value="${data?.qty || 1}" min="1" oninput="calculateTotal()" class="item-qty w-full border border-gray-300 rounded-lg p-1.5 text-xs font-bold outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-orange-900 uppercase mb-1">Harga Satuan (Rp)</label>
+                        <input type="text" value="${data ? Number(data.hargaSatuan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-hargaSatuan w-full border border-orange-200 bg-orange-50/50 rounded-lg p-1.5 text-xs font-bold text-orange-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-700 uppercase mb-1">Biaya Bahan Baku (Rp)</label>
+                        <input type="text" value="${data ? Number(data.biayaBahan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-biayaBahan w-full border border-rose-200 bg-rose-50/50 rounded-lg p-1.5 text-xs font-bold text-rose-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Biaya Lainnya (Rp)</label>
+                        <input type="text" value="${data ? Number(data.biayaLainnya).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-biayaLainnya w-full border border-purple-200 bg-purple-50/50 rounded-lg p-1.5 text-xs font-bold text-purple-900 outline-none">
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-2.5 rounded-xl border border-gray-200">
+                    <label class="block text-[10px] font-extrabold text-gray-700 uppercase mb-1.5">RINCIAN BIAYA JASA OPERASIONAL PER PCS (RP)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Potong</span>
+                            <input type="text" value="${data ? Number(data.potong || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-potong w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Jahit</span>
+                            <input type="text" value="${data ? Number(data.jahit || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-jahit w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Press</span>
+                            <input type="text" value="${data ? Number(data.press || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-press w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Kancing</span>
+                            <input type="text" value="${data ? Number(data.kancing || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-kancing w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Packing</span>
+                            <input type="text" value="${data ? Number(data.packing || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-packing w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                        <div>
+                            <span class="text-[9px] block text-gray-500 font-bold">Listrik</span>
+                            <input type="text" value="${data ? Number(data.listrik || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-listrik w-full border rounded p-1 text-xs font-bold">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(itemDiv);
+            calculateTotal();
+        }
+
+        function removeItemRow(id) {
+            const row = document.getElementById(`itemRow_${id}`);
+            if (row) {
+                row.remove();
+                calculateTotal();
+            }
+        }
+
+        // LOGIKA DYNAMIC MULTI-ITEM ROWS (FORM EDIT)
+        let editItemIndexCounter = 0;
+
+        function addEditItemRow(data = null) {
+            const container = document.getElementById('editItemsContainer');
+            if (!container) return;
+
+            const id = editItemIndexCounter++;
+            const itemDiv = document.createElement('div');
+            itemDiv.id = `editItemRow_${id}`;
+            itemDiv.className = "bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 space-y-3 relative shadow-sm";
+
+            const countItem = container.children.length + 1;
+
+            itemDiv.innerHTML = `
+                <div class="flex justify-between items-center border-b pb-1">
+                    <span class="text-xs font-black text-orange-600 uppercase">Item #${countItem} Pesanan</span>
+                    <button type="button" onclick="removeEditItemRow(${id})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-100 border border-red-300 px-2 py-0.5 rounded uppercase">
+                        🗑️ Hapus
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Jenis Order</span>
+                        <select class="edit-item-jenisOrder w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('jenisOrder', data?.jenisOrder)}</select>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Jenis Lengan</span>
+                        <select class="edit-item-jenis w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('jenis', data?.jenis)}</select>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Type Custom</span>
+                        <select class="edit-item-typeCustom w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('typeCustom', data?.typeCustom)}</select>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Type Cutting</span>
+                        <select class="edit-item-typeCutting w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('typeCutting', data?.typeCutting)}</select>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Type Kerah</span>
+                        <select class="edit-item-typeKerah w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('typeKerah', data?.typeKerah)}</select>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Bahan Kain</span>
+                        <select class="edit-item-bahan w-full border rounded p-1 text-xs font-bold bg-white">${getMasterOptionsHTML('bahan', data?.bahan)}</select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-white p-2.5 rounded-xl border">
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase block">Qty</span>
+                        <input type="number" value="${data?.qty || 1}" min="1" class="edit-item-qty w-full border rounded p-1 text-xs font-bold">
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-orange-900 uppercase block">Harga Satuan</span>
+                        <input type="text" value="${data ? Number(data.hargaSatuan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-hargaSatuan w-full border rounded p-1 text-xs font-bold">
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-rose-700 uppercase block">Bahan Baku</span>
+                        <input type="text" value="${data ? Number(data.biayaBahan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-biayaBahan w-full border rounded p-1 text-xs font-bold">
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-purple-700 uppercase block">Biaya Lainnya</span>
+                        <input type="text" value="${data ? Number(data.biayaLainnya).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-biayaLainnya w-full border rounded p-1 text-xs font-bold">
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-2 rounded-xl border">
+                    <span class="text-[9px] font-extrabold text-gray-700 uppercase block mb-1">RINCIAN JASA PER PCS</span>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                        <input type="text" placeholder="Potong" value="${data ? Number(data.potong || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-potong w-full border rounded p-1 text-[11px] font-bold">
+                        <input type="text" placeholder="Jahit" value="${data ? Number(data.jahit || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-jahit w-full border rounded p-1 text-[11px] font-bold">
+                        <input type="text" placeholder="Press" value="${data ? Number(data.press || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-press w-full border rounded p-1 text-[11px] font-bold">
+                        <input type="text" placeholder="Kancing" value="${data ? Number(data.kancing || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-kancing w-full border rounded p-1 text-[11px] font-bold">
+                        <input type="text" placeholder="Packing" value="${data ? Number(data.packing || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-packing w-full border rounded p-1 text-[11px] font-bold">
+                        <input type="text" placeholder="Listrik" value="${data ? Number(data.listrik || 0).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-listrik w-full border rounded p-1 text-[11px] font-bold">
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(itemDiv);
+        }
+
+        function removeEditItemRow(id) {
+            const row = document.getElementById(`editItemRow_${id}`);
+            if (row) row.remove();
         }
 
         async function selectLocalDirectory() {
@@ -1000,7 +1067,7 @@
                 const writable = await fileHandle.createWritable();
                 const backupObj = {
                     app: "Renzani.co Pembukuan",
-                    version: "3.4.3",
+                    version: "3.5.0",
                     lastUpdated: new Date().toISOString(),
                     authCredentials: authCredentials,
                     masterData: masterData,
@@ -1034,6 +1101,7 @@
                 return;
             }
 
+            const itemsList = getItemList(o);
             const status = o.status || 'LUNAS';
             const totalOmzet = formatRupiah(o.totalKotor);
             const sisaTagihan = formatRupiah((o.totalKotor || 0) - (o.nominalDp || 0));
@@ -1047,7 +1115,9 @@
                 statusText = "🔴 *BATAL / CANCEL*";
             }
 
-            const msg = `Halo Kak *${o.nama}* 👋\nBerikut kami sampaikan rincian tagihan/invoice pesanan Anda di *Renzani.co*:\n\n📄 *No. Invoice:* ${o.nomor}\n📅 *Tanggal Order:* ${o.tanggal}\n🎯 *Tim/Event:* ${o.timEvent || '-'}\n👕 *Jumlah:* ${o.qty} pcs\n💰 *Total Tagihan:* ${totalOmzet}\n\n📌 *Status Pembayaran:* ${statusText}\n⏳ *Deadline Selesai:* ${o.deadline || '-'}\n\nTerima kasih telah mempercayakan produksi konveksi kepada *Renzani.co*! Jika ada kendala/pertanyaan, silakan hubungi kami. 🙏✨`;
+            let itemSummary = itemsList.map((it, idx) => `${idx+1}. ${it.typeCustom || 'Apparel'} (${it.qty} pcs x ${formatRupiah(it.hargaSatuan)})`).join('\n');
+
+            const msg = `Halo Kak *${o.nama}* 👋\nBerikut kami sampaikan rincian tagihan/invoice pesanan Anda di *Renzani.co*:\n\n📄 *No. Invoice:* ${o.nomor}\n📅 *Tanggal Order:* ${o.tanggal}\n🎯 *Tim/Event:* ${o.timEvent || '-'}\n\n👕 *Rincian Pesanan:*\n${itemSummary}\n\n💰 *Total Tagihan:* ${totalOmzet}\n📌 *Status Pembayaran:* ${statusText}\n⏳ *Deadline Selesai:* ${o.deadline || '-'}\n\nTerima kasih telah mempercayakan produksi konveksi kepada *Renzani.co*! 🙏✨`;
 
             const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
             window.open(waUrl, '_blank');
@@ -1082,11 +1152,14 @@
             document.getElementById('resetDbModal').classList.add('hidden');
         }
 
-        function handleResetDatabase(e) {
+        async function handleResetDatabase(e) {
             e.preventDefault();
             const inputFrasa = document.getElementById('resetPassphrase').value.trim();
+            const hashedInput = await hashSHA256(inputFrasa);
 
-            if (inputFrasa !== (authCredentials.resetPassphrase || "ResetData123#")) {
+            const targetHash = authCredentials.resetPassphraseHash || "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9";
+
+            if (hashedInput !== targetHash && inputFrasa !== authCredentials.resetPassphrase) {
                 showToast("❌ Frasa keamanan rahasia salah!", "error");
                 return;
             }
@@ -1105,13 +1178,16 @@
             showToast("🎉 Database berhasil di-reset!", "success");
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const inputUser = document.getElementById('loginUsername').value.trim();
             const inputPwd = document.getElementById('loginPassword').value;
             const errDiv = document.getElementById('loginError');
 
-            if (inputUser.toLowerCase() === authCredentials.username.toLowerCase() && inputPwd === authCredentials.password) {
+            const hashedInput = await hashSHA256(inputPwd);
+            const targetHash = authCredentials.passwordHash || "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9";
+
+            if (inputUser.toLowerCase() === authCredentials.username.toLowerCase() && (hashedInput === targetHash || inputPwd === authCredentials.password)) {
                 currentUser = { name: authCredentials.username, role: 'admin' };
                 sessionStorage.setItem('jersey_current_user', JSON.stringify(currentUser));
                 errDiv.classList.add('hidden');
@@ -1164,7 +1240,12 @@
             
             if (document.getElementById('newUsername')) {
                 document.getElementById('newUsername').value = authCredentials.username;
-                document.getElementById('newResetPassphrase').value = authCredentials.resetPassphrase || "ResetData123#";
+            }
+
+            // Inisialisasi 1 baris item kosong saat pertama buka
+            const container = document.getElementById('itemsContainer');
+            if (container && container.children.length === 0) {
+                addItemRow();
             }
 
             generateInvoiceNumber();
@@ -1221,38 +1302,47 @@
             calculateTotal();
         }
 
-        function parseVal(id) {
-            const el = document.getElementById(id);
-            if (!el) return 0;
-            const raw = el.value.replace(/\D/g, '');
+        function parseRawNum(val) {
+            if (!val) return 0;
+            const raw = String(val).replace(/\D/g, '');
             return raw ? Number(raw) : 0;
         }
 
         function calculateTotal() {
-            const qty = Number(document.getElementById('qty').value) || 0;
-            const hargaSatuan = parseVal('hargaSatuan');
-            
-            const potong = parseVal('biayaPotong');
-            const jahit = parseVal('biayaJahit');
-            const press = parseVal('biayaPress');
-            const kancing = parseVal('biayaKancing');
-            const packing = parseVal('biayaPacking');
-            const listrik = parseVal('biayaListrik');
-            
-            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
-            const totalJasaOps = totalJasaPerPcs * qty;
-            
-            const biayaBahan = parseVal('biayaBahan');
-            const biayaLainnya = parseVal('biayaLainnya');
+            const container = document.getElementById('itemsContainer');
+            if (!container) return;
 
-            const totalOmzet = qty * hargaSatuan;
-            const totalRABOps = totalJasaOps + biayaBahan + biayaLainnya;
-            const labaBersih = totalOmzet - totalRABOps;
+            let grandQty = 0;
+            let grandOmzet = 0;
+            let grandOps = 0;
 
-            document.getElementById('dispTotalKotor').innerText = formatRupiah(totalOmzet);
-            document.getElementById('dispTotalJasa').innerText = formatRupiah(totalJasaPerPcs);
-            document.getElementById('dispSisaBayar').innerText = formatRupiah(totalRABOps);
-            document.getElementById('dispTotalReal').innerText = formatRupiah(labaBersih);
+            Array.from(container.children).forEach(row => {
+                const qty = Number(row.querySelector('.item-qty')?.value) || 0;
+                const hargaSatuan = parseRawNum(row.querySelector('.item-hargaSatuan')?.value);
+                const potong = parseRawNum(row.querySelector('.item-potong')?.value);
+                const jahit = parseRawNum(row.querySelector('.item-jahit')?.value);
+                const press = parseRawNum(row.querySelector('.item-press')?.value);
+                const kancing = parseRawNum(row.querySelector('.item-kancing')?.value);
+                const packing = parseRawNum(row.querySelector('.item-packing')?.value);
+                const listrik = parseRawNum(row.querySelector('.item-listrik')?.value);
+                const biayaBahan = parseRawNum(row.querySelector('.item-biayaBahan')?.value);
+                const biayaLainnya = parseRawNum(row.querySelector('.item-biayaLainnya')?.value);
+
+                const totalJasaOps = (potong + jahit + press + kancing + packing + listrik) * qty;
+                const omzet = qty * hargaSatuan;
+                const ops = totalJasaOps + biayaBahan + biayaLainnya;
+
+                grandQty += qty;
+                grandOmzet += omzet;
+                grandOps += ops;
+            });
+
+            const grandLaba = grandOmzet - grandOps;
+
+            document.getElementById('dispTotalQty').innerText = `${grandQty} Pcs`;
+            document.getElementById('dispTotalKotor').innerText = formatRupiah(grandOmzet);
+            document.getElementById('dispSisaBayar').innerText = formatRupiah(grandOps);
+            document.getElementById('dispTotalReal').innerText = formatRupiah(grandLaba);
         }
 
         function generateInvoiceNumber() {
@@ -1283,27 +1373,73 @@
         function saveOrder(e) {
             e.preventDefault();
 
-            const qty = Number(document.getElementById('qty').value) || 0;
-            const hargaSatuan = parseVal('hargaSatuan');
-            const potong = parseVal('biayaPotong');
-            const jahit = parseVal('biayaJahit');
-            const press = parseVal('biayaPress');
-            const kancing = parseVal('biayaKancing');
-            const packing = parseVal('biayaPacking');
-            const listrik = parseVal('biayaListrik');
-            
+            const itemsContainer = document.getElementById('itemsContainer');
+            if (!itemsContainer || itemsContainer.children.length === 0) {
+                showToast("⚠️ Minimal harus memasukkan 1 item pesanan!", "error");
+                return;
+            }
+
+            let items = [];
+            let grandQty = 0;
+            let grandTotalKotor = 0;
+            let grandTotalJasa = 0;
+            let grandBiayaBahan = 0;
+            let grandBiayaLainnya = 0;
+            let grandTotalRABOps = 0;
+
+            Array.from(itemsContainer.children).forEach(row => {
+                const qty = Number(row.querySelector('.item-qty')?.value) || 0;
+                const hargaSatuan = parseRawNum(row.querySelector('.item-hargaSatuan')?.value);
+                const potong = parseRawNum(row.querySelector('.item-potong')?.value);
+                const jahit = parseRawNum(row.querySelector('.item-jahit')?.value);
+                const press = parseRawNum(row.querySelector('.item-press')?.value);
+                const kancing = parseRawNum(row.querySelector('.item-kancing')?.value);
+                const packing = parseRawNum(row.querySelector('.item-packing')?.value);
+                const listrik = parseRawNum(row.querySelector('.item-listrik')?.value);
+                const biayaBahan = parseRawNum(row.querySelector('.item-biayaBahan')?.value);
+                const biayaLainnya = parseRawNum(row.querySelector('.item-biayaLainnya')?.value);
+
+                const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
+                const totalJasa = totalJasaPerPcs * qty;
+                const totalKotor = qty * hargaSatuan;
+                const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+                const totalReal = totalKotor - totalRABOps;
+
+                items.push({
+                    jenisOrder: row.querySelector('.item-jenisOrder')?.value,
+                    jenis: row.querySelector('.item-jenis')?.value,
+                    typeCustom: row.querySelector('.item-typeCustom')?.value,
+                    typeCutting: row.querySelector('.item-typeCutting')?.value,
+                    typeKerah: row.querySelector('.item-typeKerah')?.value,
+                    bahan: row.querySelector('.item-bahan')?.value,
+                    qty,
+                    hargaSatuan,
+                    potong,
+                    jahit,
+                    press,
+                    kancing,
+                    packing,
+                    listrik,
+                    totalJasaPerPcs,
+                    totalJasa,
+                    biayaBahan,
+                    biayaLainnya,
+                    totalKotor,
+                    totalRABOps,
+                    totalReal
+                });
+
+                grandQty += qty;
+                grandTotalKotor += totalKotor;
+                grandTotalJasa += totalJasa;
+                grandBiayaBahan += biayaBahan;
+                grandBiayaLainnya += biayaLainnya;
+                grandTotalRABOps += totalRABOps;
+            });
+
             const statusBayar = document.getElementById('statusBayar').value;
-            const nominalDp = statusBayar === 'DP' ? parseVal('nominalDp') : (statusBayar === 'LUNAS' ? (qty * hargaSatuan) : 0);
-
-            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
-            const totalJasa = totalJasaPerPcs * qty;
-            
-            const biayaBahan = parseVal('biayaBahan');
-            const biayaLainnya = parseVal('biayaLainnya');
-
-            const totalKotor = qty * hargaSatuan;
-            const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
-            const totalReal = totalKotor - totalRABOps;
+            const nominalDp = statusBayar === 'DP' ? parseRawNum('nominalDp') : (statusBayar === 'LUNAS' ? grandTotalKotor : 0);
+            const grandTotalReal = grandTotalKotor - grandTotalRABOps;
 
             const newOrder = {
                 id: Date.now(),
@@ -1316,30 +1452,17 @@
                 deadlineRaw: document.getElementById('deadline').value,
                 deadline: formatDate(document.getElementById('deadline').value),
                 
-                jenisOrder: document.getElementById('inputJenisOrder').value,
-                jenis: document.getElementById('inputJenis').value,
-                typeCustom: document.getElementById('inputTypeCustom').value,
-                typeCutting: document.getElementById('inputTypeCutting').value,
-                typeKerah: document.getElementById('inputTypeKerah').value,
-                bahan: document.getElementById('inputBahan').value,
-
                 status: statusBayar,
                 nominalDp: nominalDp,
-                qty: qty,
-                hargaSatuan: hargaSatuan,
-                potong: potong,
-                jahit: jahit,
-                press: press,
-                kancing: kancing,
-                packing: packing,
-                listrik: listrik,
-                totalJasaPerPcs: totalJasaPerPcs,
-                totalJasa: totalJasa,
-                biayaBahan: biayaBahan,
-                biayaLainnya: biayaLainnya,
-                totalKotor: totalKotor,
-                totalRABOps: totalRABOps,
-                totalReal: totalReal
+                qty: grandQty,
+                totalKotor: grandTotalKotor,
+                totalJasa: grandTotalJasa,
+                biayaBahan: grandBiayaBahan,
+                biayaLainnya: grandBiayaLainnya,
+                totalRABOps: grandTotalRABOps,
+                totalReal: grandTotalReal,
+
+                items: items
             };
 
             orders.unshift(newOrder);
@@ -1351,15 +1474,49 @@
 
             syncToLocalDirectory();
             renderTable();
+
             document.getElementById('orderForm').reset();
             document.getElementById('tanggal').valueAsDate = new Date();
             document.getElementById('deadline').valueAsDate = new Date();
             document.getElementById('statusBayar').value = 'LUNAS';
             toggleInputDp();
-            calculateTotal();
-            generateInvoiceNumber();
 
-            showToast("✅ Transaksi & Spesifikasi Berhasil Disimpan!", "success");
+            // Reset list items kembali ke 1 item kosong
+            itemsContainer.innerHTML = '';
+            addItemRow();
+
+            generateInvoiceNumber();
+            showToast("✅ Transaksi Multi-Item & RAB Berhasil Disimpan!", "success");
+        }
+
+        // Membantu membaca item baik dari format baru (array items) maupun format lama (single item)
+        function getItemList(o) {
+            if (o.items && Array.isArray(o.items) && o.items.length > 0) {
+                return o.items;
+            }
+            return [{
+                jenisOrder: o.jenisOrder || '-',
+                jenis: o.jenis || '-',
+                typeCustom: o.typeCustom || 'Apparel',
+                typeCutting: o.typeCutting || '-',
+                typeKerah: o.typeKerah || '-',
+                bahan: o.bahan || '-',
+                qty: o.qty || 1,
+                hargaSatuan: o.hargaSatuan || 0,
+                potong: o.potong || 0,
+                jahit: o.jahit || 0,
+                press: o.press || 0,
+                kancing: o.kancing || 0,
+                packing: o.packing || 0,
+                listrik: o.listrik || 0,
+                totalJasaPerPcs: o.totalJasaPerPcs || 0,
+                totalJasa: o.totalJasa || 0,
+                biayaBahan: o.biayaBahan || 0,
+                biayaLainnya: o.biayaLainnya || 0,
+                totalKotor: o.totalKotor || 0,
+                totalRABOps: o.totalRABOps || 0,
+                totalReal: o.totalReal || 0
+            }];
         }
 
         function openEditModal(id) {
@@ -1374,28 +1531,17 @@
             document.getElementById('editTanggal').value = o.tanggalRaw || '';
             document.getElementById('editDeadline').value = o.deadlineRaw || '';
 
-            document.getElementById('editJenisOrder').value = o.jenisOrder || masterData.jenisOrder[0];
-            document.getElementById('editJenis').value = o.jenis || masterData.jenis[0];
-            document.getElementById('editTypeCustom').value = o.typeCustom || masterData.typeCustom[0];
-            document.getElementById('editTypeCutting').value = o.typeCutting || masterData.typeCutting[0];
-            document.getElementById('editTypeKerah').value = o.typeKerah || masterData.typeKerah[0];
-            document.getElementById('editBahan').value = o.bahan || masterData.bahan[0];
-
             document.getElementById('editStatus').value = o.status || 'LUNAS';
             document.getElementById('editNominalDp').value = Number(o.nominalDp || 0).toLocaleString('id-ID');
             toggleEditDpInput();
 
-            document.getElementById('editQty').value = o.qty;
-            document.getElementById('editHargaSatuan').value = Number(o.hargaSatuan || 0).toLocaleString('id-ID');
-            document.getElementById('editBiayaBahan').value = Number(o.biayaBahan || 0).toLocaleString('id-ID');
-            document.getElementById('editBiayaLainnya').value = Number(o.biayaLainnya || 0).toLocaleString('id-ID');
+            const editContainer = document.getElementById('editItemsContainer');
+            editContainer.innerHTML = '';
 
-            document.getElementById('editPotong').value = Number(o.potong || 0).toLocaleString('id-ID');
-            document.getElementById('editJahit').value = Number(o.jahit || 0).toLocaleString('id-ID');
-            document.getElementById('editPress').value = Number(o.press || 0).toLocaleString('id-ID');
-            document.getElementById('editKancing').value = Number(o.kancing || 0).toLocaleString('id-ID');
-            document.getElementById('editPacking').value = Number(o.packing || 0).toLocaleString('id-ID');
-            document.getElementById('editListrik').value = Number(o.listrik || 0).toLocaleString('id-ID');
+            const itemsList = getItemList(o);
+            itemsList.forEach(itemData => {
+                addEditItemRow(itemData);
+            });
 
             document.getElementById('editModal').classList.remove('hidden');
         }
@@ -1410,26 +1556,73 @@
             const index = orders.findIndex(item => String(item.id) === String(id));
             if (index === -1) return;
 
-            const qty = Number(document.getElementById('editQty').value) || 0;
-            const hargaSatuan = parseVal('editHargaSatuan');
-            const potong = parseVal('editPotong');
-            const jahit = parseVal('editJahit');
-            const press = parseVal('editPress');
-            const kancing = parseVal('editKancing');
-            const packing = parseVal('editPacking');
-            const listrik = parseVal('editListrik');
+            const editContainer = document.getElementById('editItemsContainer');
+            if (!editContainer || editContainer.children.length === 0) {
+                showToast("⚠️ Minimal harus ada 1 item pesanan!", "error");
+                return;
+            }
+
+            let items = [];
+            let grandQty = 0;
+            let grandTotalKotor = 0;
+            let grandTotalJasa = 0;
+            let grandBiayaBahan = 0;
+            let grandBiayaLainnya = 0;
+            let grandTotalRABOps = 0;
+
+            Array.from(editContainer.children).forEach(row => {
+                const qty = Number(row.querySelector('.edit-item-qty')?.value) || 0;
+                const hargaSatuan = parseRawNum(row.querySelector('.edit-item-hargaSatuan')?.value);
+                const potong = parseRawNum(row.querySelector('.edit-item-potong')?.value);
+                const jahit = parseRawNum(row.querySelector('.edit-item-jahit')?.value);
+                const press = parseRawNum(row.querySelector('.edit-item-press')?.value);
+                const kancing = parseRawNum(row.querySelector('.edit-item-kancing')?.value);
+                const packing = parseRawNum(row.querySelector('.edit-item-packing')?.value);
+                const listrik = parseRawNum(row.querySelector('.edit-item-listrik')?.value);
+                const biayaBahan = parseRawNum(row.querySelector('.edit-item-biayaBahan')?.value);
+                const biayaLainnya = parseRawNum(row.querySelector('.edit-item-biayaLainnya')?.value);
+
+                const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
+                const totalJasa = totalJasaPerPcs * qty;
+                const totalKotor = qty * hargaSatuan;
+                const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+                const totalReal = totalKotor - totalRABOps;
+
+                items.push({
+                    jenisOrder: row.querySelector('.edit-item-jenisOrder')?.value,
+                    jenis: row.querySelector('.edit-item-jenis')?.value,
+                    typeCustom: row.querySelector('.edit-item-typeCustom')?.value,
+                    typeCutting: row.querySelector('.edit-item-typeCutting')?.value,
+                    typeKerah: row.querySelector('.edit-item-typeKerah')?.value,
+                    bahan: row.querySelector('.edit-item-bahan')?.value,
+                    qty,
+                    hargaSatuan,
+                    potong,
+                    jahit,
+                    press,
+                    kancing,
+                    packing,
+                    listrik,
+                    totalJasaPerPcs,
+                    totalJasa,
+                    biayaBahan,
+                    biayaLainnya,
+                    totalKotor,
+                    totalRABOps,
+                    totalReal
+                });
+
+                grandQty += qty;
+                grandTotalKotor += totalKotor;
+                grandTotalJasa += totalJasa;
+                grandBiayaBahan += biayaBahan;
+                grandBiayaLainnya += biayaLainnya;
+                grandTotalRABOps += totalRABOps;
+            });
 
             const statusBayar = document.getElementById('editStatus').value;
-            const nominalDp = statusBayar === 'DP' ? parseVal('editNominalDp') : (statusBayar === 'LUNAS' ? (qty * hargaSatuan) : 0);
-
-            const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
-            const totalJasa = totalJasaPerPcs * qty;
-            const biayaBahan = parseVal('editBiayaBahan');
-            const biayaLainnya = parseVal('editBiayaLainnya');
-
-            const totalKotor = qty * hargaSatuan;
-            const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
-            const totalReal = totalKotor - totalRABOps;
+            const nominalDp = statusBayar === 'DP' ? parseRawNum('editNominalDp') : (statusBayar === 'LUNAS' ? grandTotalKotor : 0);
+            const grandTotalReal = grandTotalKotor - grandTotalRABOps;
 
             orders[index] = {
                 ...orders[index],
@@ -1441,30 +1634,17 @@
                 deadlineRaw: document.getElementById('editDeadline').value,
                 deadline: formatDate(document.getElementById('editDeadline').value),
 
-                jenisOrder: document.getElementById('editJenisOrder').value,
-                jenis: document.getElementById('editJenis').value,
-                typeCustom: document.getElementById('editTypeCustom').value,
-                typeCutting: document.getElementById('editTypeCutting').value,
-                typeKerah: document.getElementById('editTypeKerah').value,
-                bahan: document.getElementById('editBahan').value,
-
                 status: statusBayar,
                 nominalDp: nominalDp,
-                qty: qty,
-                hargaSatuan: hargaSatuan,
-                potong: potong,
-                jahit: jahit,
-                press: press,
-                kancing: kancing,
-                packing: packing,
-                listrik: listrik,
-                totalJasaPerPcs: totalJasaPerPcs,
-                totalJasa: totalJasa,
-                biayaBahan: biayaBahan,
-                biayaLainnya: biayaLainnya,
-                totalKotor: totalKotor,
-                totalRABOps: totalRABOps,
-                totalReal: totalReal
+                qty: grandQty,
+                totalKotor: grandTotalKotor,
+                totalJasa: grandTotalJasa,
+                biayaBahan: grandBiayaBahan,
+                biayaLainnya: grandBiayaLainnya,
+                totalRABOps: grandTotalRABOps,
+                totalReal: grandTotalReal,
+
+                items: items
             };
 
             localStorage.setItem('jersey_orders_data', JSON.stringify(orders));
@@ -1476,7 +1656,7 @@
             syncToLocalDirectory();
             renderTable();
             closeEditModal();
-            showToast("✅ Invoice & Spesifikasi Berhasil Diperbarui!", "success");
+            showToast("✅ Invoice & Rincian Multi-Item Berhasil Diperbarui!", "success");
         }
 
         function deleteOrder(id) {
@@ -1519,7 +1699,6 @@
 
             let sumPotong = 0, sumJahit = 0, sumPress = 0, sumKancing = 0, sumPacking = 0, sumListrik = 0;
 
-            // 1. Kalkulasi Total Seluruh Data Order
             orders.forEach(o => {
                 const status = o.status || 'LUNAS';
                 const omzet = status === 'CANCEL' ? 0 : (o.totalKotor || 0);
@@ -1535,16 +1714,18 @@
                     sumTotalLainnya += lainnya;
                     sumTotalReal += real;
 
-                    sumPotong += (o.potong || 0) * (o.qty || 1);
-                    sumJahit += (o.jahit || 0) * (o.qty || 1);
-                    sumPress += (o.press || 0) * (o.qty || 1);
-                    sumKancing += (o.kancing || 0) * (o.qty || 1);
-                    sumPacking += (o.packing || 0) * (o.qty || 1);
-                    sumListrik += (o.listrik || 0) * (o.qty || 1);
+                    const itemsList = getItemList(o);
+                    itemsList.forEach(it => {
+                        sumPotong += (it.potong || 0) * (it.qty || 1);
+                        sumJahit += (it.jahit || 0) * (it.qty || 1);
+                        sumPress += (it.press || 0) * (it.qty || 1);
+                        sumKancing += (it.kancing || 0) * (it.qty || 1);
+                        sumPacking += (it.packing || 0) * (it.qty || 1);
+                        sumListrik += (it.listrik || 0) * (it.qty || 1);
+                    });
                 }
             });
 
-            // 2. Logika Pemotongan 10 Data per Halaman
             const totalPages = Math.ceil(orders.length / rowsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
@@ -1553,7 +1734,6 @@
             const endIdx = startIdx + rowsPerPage;
             const paginatedOrders = orders.slice(startIdx, endIdx);
 
-            // 3. Render Baris Tabel (Khusus 10 Data Terpilih)
             paginatedOrders.forEach(o => {
                 const status = o.status || 'LUNAS';
                 const omzet = status === 'CANCEL' ? 0 : (o.totalKotor || 0);
@@ -1561,6 +1741,9 @@
                 const bahan = o.biayaBahan || 0;
                 const lainnya = o.biayaLainnya || 0;
                 const real = status === 'CANCEL' ? 0 : (o.totalReal !== undefined ? o.totalReal : (omzet - jasa - bahan - lainnya));
+
+                const itemsList = getItemList(o);
+                const itemCountBadge = itemsList.length > 1 ? `<span class="bg-blue-100 text-blue-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded ml-1">${itemsList.length} Items</span>` : '';
 
                 let badgeStatus = '';
                 if (status === 'LUNAS') {
@@ -1577,8 +1760,8 @@
                 tr.className = status === 'CANCEL' ? "bg-red-50/40 opacity-70 border-b" : "hover:bg-gray-50 transition border-b";
                 tr.innerHTML = `
                     <td class="p-2.5">
-                        <button onclick="openEditModal('${o.id}')" class="font-extrabold text-orange-600 hover:underline cursor-pointer text-left block">
-                            ${o.nomor} ✏️
+                        <button onclick="openEditModal('${o.id}')" class="font-extrabold text-orange-600 hover:underline cursor-pointer text-left inline-flex items-center">
+                            ${o.nomor} ✏️ ${itemCountBadge}
                         </button>
                         <div class="text-[10px] text-gray-500">${o.timEvent || '-'}</div>
                     </td>
@@ -1591,7 +1774,7 @@
                         <div>${o.tanggal}</div>
                         <div class="text-[10px] font-semibold text-red-500">DL: ${o.deadline || '-'}</div>
                     </td>
-                    <td class="p-2.5 text-right font-bold whitespace-nowrap">${o.qty}</td>
+                    <td class="p-2.5 text-right font-bold whitespace-nowrap">${o.qty} Pcs</td>
                     <td class="p-2.5 text-right font-extrabold text-orange-900 whitespace-nowrap">${formatRupiah(o.totalKotor)}</td>
                     <td class="p-2.5 text-right font-extrabold text-amber-700 whitespace-nowrap">${formatRupiah(jasa)}</td>
                     <td class="p-2.5 text-right font-extrabold text-rose-700 whitespace-nowrap">${formatRupiah(bahan)}</td>
@@ -1612,14 +1795,12 @@
                 tbody.appendChild(tr);
             });
 
-            // 4. Update Ringkasan Angka & Keterangan Halaman
             document.getElementById('cardOmzet').innerText = formatRupiah(sumTotalOmzet);
             document.getElementById('cardOperasional').innerText = formatRupiah(sumTotalJasa + sumTotalBahan + sumTotalLainnya);
             document.getElementById('cardLaba').innerText = formatRupiah(sumTotalReal);
             document.getElementById('cardPiutang').innerText = formatRupiah(sumTotalLainnya);
             document.getElementById('summaryText').innerText = `Jumlah order: ${orders.length} | Total Omzet Aktif: ${formatRupiah(sumTotalOmzet)} | Laba Bersih: ${formatRupiah(sumTotalReal)}`;
 
-            // Update Kontrol Tombol Halaman
             const paginationInfo = document.getElementById('paginationInfo');
             const btnPrev = document.getElementById('btnPrevPage');
             const btnNext = document.getElementById('btnNextPage');
@@ -1747,6 +1928,17 @@
             const o = orders.find(item => String(item.id) === String(id));
             if (!o) return;
 
+            const itemsList = getItemList(o);
+
+            let rowsHTML = itemsList.map((it, idx) => `
+                <tr class="border-b">
+                    <td class="p-2">${idx+1}. Pesanan Custom Apparel (${it.typeCustom || 'Apparel'} - ${it.bahan || '-'})</td>
+                    <td class="p-2 text-center font-bold">${it.qty} pcs</td>
+                    <td class="p-2 text-right">${formatRupiah(it.hargaSatuan)}</td>
+                    <td class="p-2 text-right font-bold">${formatRupiah(it.totalKotor)}</td>
+                </tr>
+            `).join('');
+
             let breakdownBayar = `
                 <div class="flex justify-between font-black text-sm text-gray-900 border-t-2 border-orange-600 pt-2">
                     <span>TOTAL TAGIHAN:</span>
@@ -1802,19 +1994,14 @@
                     <table class="w-full text-xs text-left border-collapse mb-6">
                         <thead>
                             <tr class="border-b-2 border-gray-300 bg-gray-100 uppercase">
-                                <th class="p-2 font-bold">Deskripsi Pesanan</th>
+                                <th class="p-2 font-bold">Deskripsi Item Pesanan</th>
                                 <th class="p-2 font-bold text-center">Qty</th>
                                 <th class="p-2 font-bold text-right">Harga Satuan</th>
                                 <th class="p-2 font-bold text-right">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b">
-                                <td class="p-2">Pesanan Custom Apparel (${o.timEvent || o.nama})</td>
-                                <td class="p-2 text-center font-bold">${o.qty} pcs</td>
-                                <td class="p-2 text-right">${formatRupiah(o.hargaSatuan)}</td>
-                                <td class="p-2 text-right font-bold">${formatRupiah(o.totalKotor)}</td>
-                            </tr>
+                            ${rowsHTML}
                         </tbody>
                     </table>
 
@@ -1847,7 +2034,15 @@
             const o = orders.find(item => String(item.id) === String(id));
             if (!o) return;
 
+            const itemsList = getItemList(o);
             const sisa = (o.totalKotor || 0) - (o.nominalDp || 0);
+
+            let itemsHTML = itemsList.map(it => `
+                <div class="flex justify-between mb-1">
+                    <span>${it.qty}x ${it.typeCustom || 'Apparel'}</span>
+                    <span>${formatRupiah(it.totalKotor)}</span>
+                </div>
+            `).join('');
 
             const printContent = `
                 <div id="thermalReceiptContainer" class="thermal-receipt shadow-md border p-2">
@@ -1869,10 +2064,7 @@
                     <p class="text-[9px]">--------------------------------</p>
 
                     <div class="mb-2 text-[10px]">
-                        <div class="flex justify-between">
-                            <span>${o.qty}x Custom Apparel</span>
-                            <span>${formatRupiah(o.hargaSatuan)}</span>
-                        </div>
+                        ${itemsHTML}
                     </div>
 
                     <p class="text-[9px]">--------------------------------</p>
@@ -1965,6 +2157,23 @@
             const o = orders.find(item => String(item.id) === String(id));
             if (!o) return;
 
+            const itemsList = getItemList(o);
+
+            let specsHTML = itemsList.map((it, idx) => `
+                <div class="bg-blue-50/60 p-3 rounded-lg border border-blue-200 mb-2">
+                    <div class="font-extrabold text-blue-900 border-b border-blue-200 pb-1 mb-2 uppercase text-[11px]">
+                        ITEM #${idx+1}: ${it.typeCustom || 'Apparel'} (${it.qty} Pcs)
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div><span class="text-gray-500 block text-[9px] font-bold">JENIS ORDER:</span> <span class="font-bold text-gray-800">${it.jenisOrder || '-'}</span></div>
+                        <div><span class="text-gray-500 block text-[9px] font-bold">JENIS LENGAN:</span> <span class="font-bold text-gray-800">${it.jenis || '-'}</span></div>
+                        <div><span class="text-gray-500 block text-[9px] font-bold">TYPE CUTTING:</span> <span class="font-bold text-gray-800">${it.typeCutting || '-'}</span></div>
+                        <div><span class="text-gray-500 block text-[9px] font-bold">TYPE KERAH:</span> <span class="font-bold text-gray-800">${it.typeKerah || '-'}</span></div>
+                        <div><span class="text-gray-500 block text-[9px] font-bold">BAHAN KAIN:</span> <span class="font-bold text-gray-800">${it.bahan || '-'}</span></div>
+                    </div>
+                </div>
+            `).join('');
+
             const printContent = `
                 <div class="w-full">
                     <div class="border-b-2 border-gray-800 pb-3 mb-4 flex justify-between items-start">
@@ -1993,16 +2202,9 @@
                         </div>
                     </div>
 
-                    <div class="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200 text-xs">
-                        <h4 class="font-extrabold text-blue-900 uppercase mb-2 border-b border-blue-200 pb-1">RINCIAN SPESIFIKASI WORKSHOP</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            <div><span class="text-gray-500 block text-[10px] font-bold">JENIS ORDER:</span> <span class="font-bold text-gray-800">${o.jenisOrder || '-'}</span></div>
-                            <div><span class="text-gray-500 block text-[10px] font-bold">JENIS LENGAN:</span> <span class="font-bold text-gray-800">${o.jenis || '-'}</span></div>
-                            <div><span class="text-gray-500 block text-[10px] font-bold">TYPE CUSTOM:</span> <span class="font-bold text-gray-800">${o.typeCustom || '-'}</span></div>
-                            <div><span class="text-gray-500 block text-[10px] font-bold">TYPE CUTTING:</span> <span class="font-bold text-gray-800">${o.typeCutting || '-'}</span></div>
-                            <div><span class="text-gray-500 block text-[10px] font-bold">TYPE KERAH:</span> <span class="font-bold text-gray-800">${o.typeKerah || '-'}</span></div>
-                            <div><span class="text-gray-500 block text-[10px] font-bold">BAHAN KAIN:</span> <span class="font-bold text-gray-800">${o.bahan || '-'}</span></div>
-                        </div>
+                    <div class="mb-4">
+                        <h4 class="font-extrabold text-gray-800 uppercase mb-2">RINCIAN SPESIFIKASI WORKSHOP (${itemsList.length} ITEM)</h4>
+                        ${specsHTML}
                     </div>
 
                     <div class="mb-6">
@@ -2096,6 +2298,20 @@
             const o = orders.find(item => String(item.id) === String(id));
             if (!o) return;
 
+            const itemsList = getItemList(o);
+
+            let rabRows = itemsList.map((it, idx) => `
+                <tr class="bg-gray-50/80 font-bold border-t"><td colspan="3" class="p-2 text-orange-900">ITEM #${idx+1}: ${it.typeCustom || 'Apparel'} (${it.qty} Pcs)</td></tr>
+                <tr><td class="p-1.5 pl-4">Jasa Potong (${formatRupiah(it.potong || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.potong || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4">Jasa Jahit (${formatRupiah(it.jahit || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.jahit || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4">Jasa Press (${formatRupiah(it.press || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.press || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4">Jasa Kancing (${formatRupiah(it.kancing || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.kancing || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4">Jasa Packing (${formatRupiah(it.packing || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.packing || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4">Listrik Overhead (${formatRupiah(it.listrik || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.listrik || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4 font-bold">Biaya Bahan Baku Item</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold">${formatRupiah(it.biayaBahan || 0)}</td></tr>
+                <tr><td class="p-1.5 pl-4 font-bold">Biaya Lainnya Item</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold">${formatRupiah(it.biayaLainnya || 0)}</td></tr>
+            `).join('');
+
             const printContent = `
                 <div class="w-full">
                     <div class="border-b-2 border-emerald-600 pb-3 mb-4 flex justify-between items-start">
@@ -2114,26 +2330,19 @@
 
                     <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 mb-4 text-xs">
                         <p><b>Nama Project/Pemesan:</b> ${o.nama} (${o.timEvent || '-'})</p>
-                        <p><b>Volume Produksi:</b> ${o.qty} pcs</p>
+                        <p><b>Total Volume Produksi:</b> ${o.qty} pcs (${itemsList.length} Item)</p>
                     </div>
 
                     <table class="w-full text-xs text-left border-collapse mb-4">
                         <thead>
                             <tr class="bg-gray-100 uppercase border-b">
                                 <th class="p-2 font-bold">Item Komponen Biaya</th>
-                                <th class="p-2 font-bold text-right">Biaya / Pcs</th>
+                                <th class="p-2 font-bold text-right">Rincian</th>
                                 <th class="p-2 font-bold text-right">Total Subtotal</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr><td class="p-2">Jasa Potong</td><td class="p-2 text-right">${formatRupiah(o.potong || 0)}</td><td class="p-2 text-right">${formatRupiah((o.potong || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2">Jasa Jahit</td><td class="p-2 text-right">${formatRupiah(o.jahit || 0)}</td><td class="p-2 text-right">${formatRupiah((o.jahit || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2">Jasa Press</td><td class="p-2 text-right">${formatRupiah(o.press || 0)}</td><td class="p-2 text-right">${formatRupiah((o.press || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2">Jasa Kancing</td><td class="p-2 text-right">${formatRupiah(o.kancing || 0)}</td><td class="p-2 text-right">${formatRupiah((o.kancing || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2">Jasa Packing</td><td class="p-2 text-right">${formatRupiah(o.packing || 0)}</td><td class="p-2 text-right">${formatRupiah((o.packing || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2">Listrik Overhead</td><td class="p-2 text-right">${formatRupiah(o.listrik || 0)}</td><td class="p-2 text-right">${formatRupiah((o.listrik || 0) * o.qty)}</td></tr>
-                            <tr><td class="p-2 font-bold">Biaya Bahan Baku</td><td class="p-2 text-right">-</td><td class="p-2 text-right font-bold">${formatRupiah(o.biayaBahan || 0)}</td></tr>
-                            <tr><td class="p-2 font-bold">Biaya Lainnya (Aksesoris/Ongkir)</td><td class="p-2 text-right">-</td><td class="p-2 text-right font-bold">${formatRupiah(o.biayaLainnya || 0)}</td></tr>
+                            ${rabRows}
                         </tbody>
                     </table>
 
@@ -2173,38 +2382,29 @@
 
             const wb = XLSX.utils.book_new();
 
-            const excelData = orders.map(o => ({
-                "Nomor Invoice": o.nomor,
-                "Status Pembayaran": o.status || 'LUNAS',
-                "Nominal DP": o.nominalDp || 0,
-                "Nama Pemesan": o.nama,
-                "Tim / Event": o.timEvent || '-',
-                "No. WhatsApp": o.noHp || '-',
-                "Tanggal Order": o.tanggal,
-                "Deadline": o.deadline || '-',
-                
-                "Jenis Order": o.jenisOrder || '-',
-                "Jenis Lengan": o.jenis || '-',
-                "Type Custom": o.typeCustom || '-',
-                "Type Cutting": o.typeCutting || '-',
-                "Type Kerah": o.typeKerah || '-',
-                "Bahan Kain": o.bahan || '-',
+            const excelData = orders.map(o => {
+                const itemsList = getItemList(o);
+                const itemSummary = itemsList.map(it => `${it.typeCustom || 'Apparel'} (${it.qty} pcs)`).join('; ');
 
-                "Qty (Pcs)": o.qty,
-                "Harga Satuan": o.hargaSatuan,
-                "Total Omzet": o.totalKotor,
-                "Potong / Pcs": o.potong || 0,
-                "Jahit / Pcs": o.jahit || 0,
-                "Press / Pcs": o.press || 0,
-                "Kancing / Pcs": o.kancing || 0,
-                "Packing / Pcs": o.packing || 0,
-                "Listrik / Pcs": o.listrik || 0,
-                "Total Jasa Ops": o.totalJasa || 0,
-                "Biaya Bahan Baku": o.biayaBahan || 0,
-                "Biaya Lainnya": o.biayaLainnya || 0,
-                "Total RAB HPP": o.totalRABOps || 0,
-                "Laba Bersih": o.totalReal || 0
-            }));
+                return {
+                    "Nomor Invoice": o.nomor,
+                    "Status Pembayaran": o.status || 'LUNAS',
+                    "Nominal DP": o.nominalDp || 0,
+                    "Nama Pemesan": o.nama,
+                    "Tim / Event": o.timEvent || '-',
+                    "No. WhatsApp": o.noHp || '-',
+                    "Tanggal Order": o.tanggal,
+                    "Deadline": o.deadline || '-',
+                    "Rincian Item": itemSummary,
+                    "Total Qty (Pcs)": o.qty,
+                    "Total Omzet": o.totalKotor,
+                    "Total Jasa Ops": o.totalJasa || 0,
+                    "Biaya Bahan Baku": o.biayaBahan || 0,
+                    "Biaya Lainnya": o.biayaLainnya || 0,
+                    "Total RAB HPP": o.totalRABOps || 0,
+                    "Laba Bersih": o.totalReal || 0
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(excelData);
             XLSX.utils.book_append_sheet(wb, ws, "Monitoring Biaya Renzani");
@@ -2215,7 +2415,7 @@
         function exportBackupJSON() {
             const backupObj = {
                 app: "Renzani.co Pembukuan",
-                version: "3.4.3",
+                version: "3.5.0",
                 lastUpdated: new Date().toISOString(),
                 authCredentials: authCredentials,
                 masterData: masterData,
@@ -2251,7 +2451,6 @@
                             if (data.masterData) {
                                 masterData = data.masterData;
                                 localStorage.setItem('jersey_master_data', JSON.stringify(masterData));
-                                populateMasterDropdowns();
                                 renderMasterDataManagement();
                             }
                             if (data.authCredentials) {
@@ -2283,7 +2482,7 @@
             reader.readAsText(file);
         }
 
-        function handleUpdateCredentials(e) {
+        async function handleUpdateCredentials(e) {
             e.preventDefault();
             const newAdmin = document.getElementById('newUsername').value.trim();
             const newPass = document.getElementById('newPassword').value;
@@ -2294,9 +2493,17 @@
                 return;
             }
 
-            authCredentials = { username: newAdmin, password: newPass, resetPassphrase: newResetPass };
+            const passHash = await hashSHA256(newPass);
+            const resetHash = await hashSHA256(newResetPass);
+
+            authCredentials = {
+                username: newAdmin,
+                passwordHash: passHash,
+                resetPassphraseHash: resetHash
+            };
+            
             localStorage.setItem('jersey_auth_credentials', JSON.stringify(authCredentials));
-            showToast("✅ Username, Password & Frasa Reset berhasil diperbarui!", "success");
+            showToast("✅ Username, Password & Frasa Reset berhasil diperbarui & terenkripsi!", "success");
         }
     </script>
 </body>
