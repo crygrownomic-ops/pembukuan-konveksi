@@ -58,7 +58,7 @@
                 <h2 class="text-2xl font-black text-gray-800 tracking-wide">Renzani.co</h2>
                 <p class="text-xs text-gray-500 font-semibold mt-0.5">Sistem Pembukuan Konveksi & Management RAB</p>
                 <div class="mt-2">
-                    <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-0.5 rounded-full border border-orange-300">v3.5.0 Multi-Item Order Edition</span>
+                    <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-0.5 rounded-full border border-orange-300">v3.5.1 RAB Per Pcs Edition</span>
                 </div>
             </div>
 
@@ -83,7 +83,7 @@
             </form>
 
             <div class="mt-6 pt-4 border-t border-gray-100 text-center text-[11px] text-gray-400">
-                Renzani.co Web Application &copy; 2026 | System Version 3.5.0
+                Renzani.co Web Application &copy; 2026 | System Version 3.5.1
             </div>
         </div>
     </div>
@@ -339,7 +339,7 @@
                         <h2 class="text-lg font-bold text-gray-800 uppercase">FORM INPUT TRANSAKSI ORDER & ESTIMASI RAB</h2>
                         <p class="text-xs text-gray-500">Satu invoice dapat memuat lebih dari satu jenis item/produk yang berbeda.</p>
                     </div>
-                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-full uppercase">Renzani v3.5.0</span>
+                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-full uppercase">Renzani v3.5.1</span>
                 </div>
 
                 <form id="orderForm" onsubmit="saveOrder(event)" class="space-y-6">
@@ -901,11 +901,11 @@
                         <input type="text" value="${data ? Number(data.hargaSatuan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-hargaSatuan w-full border border-orange-200 bg-orange-50/50 rounded-lg p-1.5 text-xs font-bold text-orange-900 outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-rose-700 uppercase mb-1">Biaya Bahan Baku (Rp)</label>
+                        <label class="block text-[10px] font-bold text-rose-700 uppercase mb-1">Biaya Bahan Baku / Pcs (Rp)</label>
                         <input type="text" value="${data ? Number(data.biayaBahan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-biayaBahan w-full border border-rose-200 bg-rose-50/50 rounded-lg p-1.5 text-xs font-bold text-rose-900 outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Biaya Lainnya (Rp)</label>
+                        <label class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Biaya Lainnya / Pcs (Rp)</label>
                         <input type="text" value="${data ? Number(data.biayaLainnya).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="item-biayaLainnya w-full border border-purple-200 bg-purple-50/50 rounded-lg p-1.5 text-xs font-bold text-purple-900 outline-none">
                     </div>
                 </div>
@@ -1012,11 +1012,11 @@
                         <input type="text" value="${data ? Number(data.hargaSatuan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-hargaSatuan w-full border rounded p-1 text-xs font-bold">
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-rose-700 uppercase block">Bahan Baku</span>
+                        <span class="text-[9px] font-bold text-rose-700 uppercase block">Bahan Baku / Pcs</span>
                         <input type="text" value="${data ? Number(data.biayaBahan).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-biayaBahan w-full border rounded p-1 text-xs font-bold">
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-purple-700 uppercase block">Biaya Lainnya</span>
+                        <span class="text-[9px] font-bold text-purple-700 uppercase block">Lainnya / Pcs</span>
                         <input type="text" value="${data ? Number(data.biayaLainnya).toLocaleString('id-ID') : '0'}" oninput="formatCurrencyInput(this)" class="edit-item-biayaLainnya w-full border rounded p-1 text-xs font-bold">
                     </div>
                 </div>
@@ -1067,7 +1067,7 @@
                 const writable = await fileHandle.createWritable();
                 const backupObj = {
                     app: "Renzani.co Pembukuan",
-                    version: "3.5.0",
+                    version: "3.5.1",
                     lastUpdated: new Date().toISOString(),
                     authCredentials: authCredentials,
                     masterData: masterData,
@@ -1328,9 +1328,10 @@
                 const biayaBahan = parseRawNum(row.querySelector('.item-biayaBahan')?.value);
                 const biayaLainnya = parseRawNum(row.querySelector('.item-biayaLainnya')?.value);
 
-                const totalJasaOps = (potong + jahit + press + kancing + packing + listrik) * qty;
+                // Biaya Bahan dan Lainnya kini dihitung PER PCS (x Qty)
+                const opsPerPcs = potong + jahit + press + kancing + packing + listrik + biayaBahan + biayaLainnya;
                 const omzet = qty * hargaSatuan;
-                const ops = totalJasaOps + biayaBahan + biayaLainnya;
+                const ops = opsPerPcs * qty;
 
                 grandQty += qty;
                 grandOmzet += omzet;
@@ -1401,8 +1402,10 @@
 
                 const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
                 const totalJasa = totalJasaPerPcs * qty;
+                const totalBahan = biayaBahan * qty;
+                const totalLainnya = biayaLainnya * qty;
                 const totalKotor = qty * hargaSatuan;
-                const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+                const totalRABOps = totalJasa + totalBahan + totalLainnya;
                 const totalReal = totalKotor - totalRABOps;
 
                 items.push({
@@ -1432,8 +1435,8 @@
                 grandQty += qty;
                 grandTotalKotor += totalKotor;
                 grandTotalJasa += totalJasa;
-                grandBiayaBahan += biayaBahan;
-                grandBiayaLainnya += biayaLainnya;
+                grandBiayaBahan += totalBahan;
+                grandBiayaLainnya += totalLainnya;
                 grandTotalRABOps += totalRABOps;
             });
 
@@ -1584,8 +1587,10 @@
 
                 const totalJasaPerPcs = potong + jahit + press + kancing + packing + listrik;
                 const totalJasa = totalJasaPerPcs * qty;
+                const totalBahan = biayaBahan * qty;
+                const totalLainnya = biayaLainnya * qty;
                 const totalKotor = qty * hargaSatuan;
-                const totalRABOps = totalJasa + biayaBahan + biayaLainnya;
+                const totalRABOps = totalJasa + totalBahan + totalLainnya;
                 const totalReal = totalKotor - totalRABOps;
 
                 items.push({
@@ -1615,8 +1620,8 @@
                 grandQty += qty;
                 grandTotalKotor += totalKotor;
                 grandTotalJasa += totalJasa;
-                grandBiayaBahan += biayaBahan;
-                grandBiayaLainnya += biayaLainnya;
+                grandBiayaBahan += totalBahan;
+                grandBiayaLainnya += totalLainnya;
                 grandTotalRABOps += totalRABOps;
             });
 
@@ -2308,8 +2313,8 @@
                 <tr><td class="p-1.5 pl-4">Jasa Kancing (${formatRupiah(it.kancing || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.kancing || 0) * it.qty)}</td></tr>
                 <tr><td class="p-1.5 pl-4">Jasa Packing (${formatRupiah(it.packing || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.packing || 0) * it.qty)}</td></tr>
                 <tr><td class="p-1.5 pl-4">Listrik Overhead (${formatRupiah(it.listrik || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right">${formatRupiah((it.listrik || 0) * it.qty)}</td></tr>
-                <tr><td class="p-1.5 pl-4 font-bold">Biaya Bahan Baku Item</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold">${formatRupiah(it.biayaBahan || 0)}</td></tr>
-                <tr><td class="p-1.5 pl-4 font-bold">Biaya Lainnya Item</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold">${formatRupiah(it.biayaLainnya || 0)}</td></tr>
+                <tr><td class="p-1.5 pl-4 font-bold text-rose-900">Biaya Bahan Baku (${formatRupiah(it.biayaBahan || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold text-rose-900">${formatRupiah((it.biayaBahan || 0) * it.qty)}</td></tr>
+                <tr><td class="p-1.5 pl-4 font-bold text-purple-900">Biaya Lainnya (${formatRupiah(it.biayaLainnya || 0)}/pcs)</td><td class="p-1.5 text-right">-</td><td class="p-1.5 text-right font-bold text-purple-900">${formatRupiah((it.biayaLainnya || 0) * it.qty)}</td></tr>
             `).join('');
 
             const printContent = `
@@ -2415,7 +2420,7 @@
         function exportBackupJSON() {
             const backupObj = {
                 app: "Renzani.co Pembukuan",
-                version: "3.5.0",
+                version: "3.5.1",
                 lastUpdated: new Date().toISOString(),
                 authCredentials: authCredentials,
                 masterData: masterData,
